@@ -64,6 +64,110 @@ function useRouter() {
   return useContext(RouterContext);
 }
 
+/* ─── lightbox context ─── */
+
+interface LightboxCtx {
+  open: (product: Product) => void;
+}
+
+const LightboxContext = createContext<LightboxCtx>({ open: () => {} });
+
+function useLightbox() {
+  return useContext(LightboxContext);
+}
+
+function LightboxModal({
+  product,
+  onClose,
+}: {
+  product: Product | null;
+  onClose: () => void;
+}) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (product) {
+      requestAnimationFrame(() => setVisible(true));
+      document.body.style.overflow = "hidden";
+    } else {
+      setVisible(false);
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [product]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  if (!product) return null;
+
+  return (
+    <div
+      className={`fixed inset-0 z-[100] flex items-center justify-center transition-all duration-500 ${
+        visible ? "opacity-100" : "opacity-0 pointer-events-none"
+      }`}
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-espresso/60 backdrop-blur-md"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div
+        className={`relative z-10 mx-6 w-full max-w-3xl transition-all duration-500 ${
+          visible ? "scale-100 opacity-100" : "scale-95 opacity-0"
+        }`}
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute -top-12 right-0 flex h-10 w-10 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white/70 backdrop-blur-sm transition-all duration-300 hover:border-white/30 hover:bg-white/20 hover:text-white"
+          aria-label="Close preview"
+        >
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+
+        {/* Image container */}
+        <div className="overflow-hidden rounded-2xl bg-linen">
+          <img
+            src={product.image}
+            alt={product.name}
+            className="h-full w-full object-cover"
+          />
+        </div>
+
+        {/* Product info */}
+        <div className="mt-6 text-center">
+          <span className={`inline-block rounded-xl border font-sans text-[10px] font-semibold uppercase tracking-[.12em] px-3 py-1.5 ${
+            product.material === "Gold"
+              ? "border-camel/30 bg-white/80 text-cocoa backdrop-blur-sm"
+              : "border-espresso/15 bg-white/80 text-espresso backdrop-blur-sm"
+          }`}>
+            {product.material}
+          </span>
+          <h3 className="mt-3 font-serif text-2xl font-semibold text-white md:text-3xl">
+            {product.name}
+          </h3>
+          <p className="mt-2 font-sans text-xs tracking-wider text-white/50">
+            Visit store for pricing & details
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ───────────────── data ───────────────── */
 
 type Category = "All" | "Gold" | "Silver" | "Necklaces" | "Earrings" | "Bangles" | "Rings" | "Bracelets" | "Pendants";
@@ -315,8 +419,13 @@ function Hero() {
 /* ───────────────── product card ───────────────── */
 
 function ProductCard({ product }: { product: Product }) {
+  const { open } = useLightbox();
+
   return (
-    <div className="group cursor-pointer">
+    <div
+      className="group cursor-pointer"
+      onClick={() => open(product)}
+    >
       <div className="relative aspect-square overflow-hidden rounded-2xl bg-linen">
         <img src={product.image} alt={product.name} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" loading="lazy" />
         <span className={`absolute top-4 left-4 rounded-xl border font-sans text-[10px] font-semibold uppercase tracking-[.12em] px-3 py-1.5 ${
@@ -328,8 +437,9 @@ function ProductCard({ product }: { product: Product }) {
         </span>
       </div>
       <div className="pt-5 pb-2">
-        <h3 className="font-serif text-lg font-semibold text-espresso transition-colors duration-300 group-hover:text-camel md:text-xl">{product.name}</h3>
-        <p className="mt-1.5 font-sans text-sm font-medium text-cocoa">{product.price}</p>
+        <h3 className="font-serif text-lg font-semibold text-espresso transition-colors duration-300 group-hover:text-camel md:text-xl">
+          {product.name}
+        </h3>
       </div>
     </div>
   );
@@ -423,10 +533,10 @@ function Reviews() {
               <ChevronRight className="h-5 w-5" strokeWidth={1.5} />
             </button>
           )}
-          <div ref={scrollRef} className="hide-scrollbar flex gap-5 overflow-x-auto scroll-smooth pb-4 sm:gap-6">
+          <div ref={scrollRef} className="hide-scrollbar flex gap-4 overflow-x-auto scroll-smooth px-1 pb-4 sm:gap-6">
             {REVIEWS.map((r) => (
-              <div key={r.id} className="min-w-[280px] flex-shrink-0 rounded-2xl border border-khaki/30 bg-white p-8 sm:min-w-[350px]">
-                <div className="mb-5 flex gap-1">
+              <div key={r.id} className="w-[85vw] max-w-[400px] flex-shrink-0 rounded-2xl border border-khaki/30 bg-white p-6 sm:w-[350px] sm:p-8">
+                <div className="mb-4 flex gap-1">
                   {Array.from({ length: r.rating }).map((_, i) => (
                     <Star key={i} className="h-3.5 w-3.5 fill-camel text-camel" />
                   ))}
@@ -692,17 +802,29 @@ function LandingPage() {
 
 export default function App() {
   const [page, setPage] = useState<Page>("home");
+  const [lightboxProduct, setLightboxProduct] = useState<Product | null>(null);
 
   const navigate = useCallback((p: Page) => {
     setPage(p);
   }, []);
 
+  const openLightbox = useCallback((product: Product) => {
+    setLightboxProduct(product);
+  }, []);
+
+  const closeLightbox = useCallback(() => {
+    setLightboxProduct(null);
+  }, []);
+
   return (
     <RouterContext.Provider value={{ page, navigate }}>
-      <div className="min-h-screen bg-white font-sans">
-        {page === "home" && <LandingPage />}
-        {page === "collection" && <CollectionPage />}
-      </div>
+      <LightboxContext.Provider value={{ open: openLightbox }}>
+        <div className="min-h-screen bg-white font-sans">
+          {page === "home" && <LandingPage />}
+          {page === "collection" && <CollectionPage />}
+        </div>
+        <LightboxModal product={lightboxProduct} onClose={closeLightbox} />
+      </LightboxContext.Provider>
     </RouterContext.Provider>
   );
 }
