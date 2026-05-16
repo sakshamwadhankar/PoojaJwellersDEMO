@@ -239,19 +239,8 @@ function LightboxModal({
 
 /* ───────────────── data ───────────────── */
 
-type Category = "All" | "Diamond" | "Necklaces" | "Earrings" | "Bangles" | "Rings" | "Bracelets" | "Pendants" | "Other";
-
-const CATEGORIES: Category[] = [
-  "All",
-  "Diamond",
-  "Necklaces",
-  "Pendants",
-  "Earrings",
-  "Bangles",
-  "Rings",
-  "Bracelets",
-  "Other",
-];
+type Category = string;
+const DEFAULT_CATEGORY_ORDER = ["Diamond", "Necklaces", "Pendants", "Earrings", "Bangles", "Rings", "Bracelets", "Other"];
 
 /* ── Firestore data types ── */
 
@@ -863,6 +852,18 @@ function CollectionPage({ allProducts }: { allProducts: Product[] }) {
   const materialsRef = useRef<HTMLDivElement>(null);
 
   const MATERIALS = ["All", "Gold", "Silver", "Platinum"];
+  const discoveredCategories = Array.from(
+    new Set(
+      allProducts
+        .map((product) => product.category?.trim())
+        .filter((category): category is string => Boolean(category)),
+    ),
+  );
+  const categories = [
+    "All",
+    ...DEFAULT_CATEGORY_ORDER.filter((category) => discoveredCategories.includes(category)),
+    ...discoveredCategories.filter((category) => !DEFAULT_CATEGORY_ORDER.includes(category)).sort((a, b) => a.localeCompare(b)),
+  ];
 
   let filtered = allProducts;
   if (activeMaterial !== "All") {
@@ -922,7 +923,7 @@ function CollectionPage({ allProducts }: { allProducts: Product[] }) {
             ref={categoriesRef}
             className="hide-scrollbar flex gap-2 overflow-x-auto py-3 sm:gap-3"
           >
-            {CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <button
                 key={cat}
                 data-cat={cat}

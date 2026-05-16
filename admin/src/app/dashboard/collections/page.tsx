@@ -10,6 +10,22 @@ import { db, storage } from "@/lib/firebase";
 interface JewelleryItem {
   id: string; caption: string; category: string; material?: string;
   image_url: string; is_top_6: boolean;
+  created_at?: { toMillis?: () => number; seconds?: number } | null;
+}
+
+const MATERIAL_OPTIONS = ["Gold", "Silver", "Platinum"];
+const DEFAULT_SUBCATEGORY_OPTIONS = ["Diamond", "Necklaces", "Pendants", "Earrings", "Bangles", "Rings", "Bracelets", "Other"];
+
+function getCreatedAtValue(item: JewelleryItem) {
+  if (item.created_at?.toMillis) {
+    return item.created_at.toMillis();
+  }
+
+  if (typeof item.created_at?.seconds === "number") {
+    return item.created_at.seconds * 1000;
+  }
+
+  return 0;
 }
 
 export default function CollectionsPage() {
@@ -25,14 +41,60 @@ export default function CollectionsPage() {
   const [material, setMaterial] = useState("Gold");
   const [isTop6, setIsTop6] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [newCategoryInput, setNewCategoryInput] = useState("");
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editCaption, setEditCaption] = useState("");
   const [editCategory, setEditCategory] = useState("Diamond");
   const [editMaterial, setEditMaterial] = useState("Gold");
   const [editIsTop6, setEditIsTop6] = useState(false);
+  const [editCategoryInput, setEditCategoryInput] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<JewelleryItem | null>(null);
+  const [top6PopupOpen, setTop6PopupOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [materialFilter, setMaterialFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+
+  const top6Count = items.filter((item) => item.is_top_6).length;
+
+  function canMarkAsTop6(currentItemId?: string) {
+    const featuredCountExcludingCurrent = items.filter(
+      (item) => item.is_top_6 && item.id !== currentItemId,
+    ).length;
+
+    return featuredCountExcludingCurrent < 6;
+  }
+
+  function showTop6Popup() {
+    setTop6PopupOpen(true);
+  }
+
+  const categoryOptions = Array.from(
+    new Set(
+      [
+        ...DEFAULT_SUBCATEGORY_OPTIONS,
+        ...items.map((item) => item.category).filter(Boolean),
+        category,
+        editCategory,
+      ].map((value) => value.trim()),
+    ),
+  ).filter(Boolean);
+
+  function addCustomCategory(value: string, mode: "new" | "edit") {
+    const nextCategory = value.trim();
+    if (!nextCategory) return;
+
+    if (mode === "new") {
+      setCategory(nextCategory);
+      setNewCategoryInput("");
+      return;
+    }
+
+    setEditCategory(nextCategory);
+    setEditCategoryInput("");
+  }
 
   function startEdit(item: JewelleryItem) {
     setEditingId(item.id);
@@ -40,10 +102,15 @@ export default function CollectionsPage() {
     setEditCategory(item.category);
     setEditMaterial(item.material || "Gold");
     setEditIsTop6(item.is_top_6);
+    setEditCategoryInput("");
   }
 
   async function handleSaveEdit() {
     if (!editingId) return;
+    if (editIsTop6 && !canMarkAsTop6(editingId)) {
+      showTop6Popup();
+      return;
+    }
     try {
       await updateDoc(doc(db, "collections", editingId), {
         caption: editCaption.trim(),
@@ -77,10 +144,32 @@ export default function CollectionsPage() {
     setFile(f); setPreview(URL.createObjectURL(f));
   }
 
+  function toggleNewTop6() {
+    if (!isTop6 && !canMarkAsTop6()) {
+      showTop6Popup();
+      return;
+    }
+
+    setIsTop6(!isTop6);
+  }
+
+  function toggleEditTop6(nextValue: boolean) {
+    if (nextValue && !canMarkAsTop6(editingId || undefined)) {
+      showTop6Popup();
+      return;
+    }
+
+    setEditIsTop6(nextValue);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!file) return setError("Please select an image.");
     if (!caption.trim()) return setError("Caption is required.");
+    if (isTop6 && !canMarkAsTop6()) {
+      showTop6Popup();
+      return;
+    }
     setError(""); setSuccess(""); setUploading(true);
     try {
       const storageRef = ref(storage, `collections/${Date.now()}_${file.name}`);
@@ -98,6 +187,7 @@ export default function CollectionsPage() {
       });
       setSuccess("Item added successfully!");
       setCaption(""); setCategory("Diamond"); setMaterial("Gold"); setIsTop6(false);
+      setNewCategoryInput("");
       setFile(null); setPreview(null); setProgress(0);
       if (fileRef.current) fileRef.current.value = "";
       fetchItems();
@@ -126,8 +216,49 @@ export default function CollectionsPage() {
     }
   }
 
+  const filteredItems = items.filter((item) => {
+    const normalizedMaterial =
+      item.material || (MATERIAL_OPTIONS.includes(item.category) ? item.category : "Gold");
+    const matchesSearch = item.caption.toLowerCase().includes(searchQuery.trim().toLowerCase());
+    const matchesMaterial = materialFilter === "All" || normalizedMaterial === materialFilter;
+    const matchesCategory = categoryFilter === "All" || item.category === categoryFilter;
+
+    return matchesSearch && matchesMaterial && matchesCategory;
+  });
+
+  const visibleItems = [...filteredItems].sort((a, b) => {
+    const createdAtDiff = getCreatedAtValue(b) - getCreatedAtValue(a);
+    if (createdAtDiff !== 0) {
+      return sortOrder === "newest" ? createdAtDiff : -createdAtDiff;
+    }
+
+    return sortOrder === "newest"
+      ? b.caption.localeCompare(a.caption)
+      : a.caption.localeCompare(b.caption);
+  });
+
   return (
-    <div className="py-6 max-w-6xl">
+    <div className="max-w-6xl py-6 pb-28 md:pb-6">
+      {top6PopupOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900">Top 6 is full</h3>
+            <p className="mt-2 text-sm text-gray-500">
+              You already have 6 featured catalog items. Remove one from Top 6 before adding another.
+            </p>
+            <div className="mt-5 flex items-center justify-end">
+              <button
+                type="button"
+                className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white transition-opacity"
+                onClick={() => setTop6PopupOpen(false)}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {itemToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
@@ -191,7 +322,7 @@ export default function CollectionsPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Main Category (Material)</label>
               <div className="flex flex-wrap gap-2">
-                {["Gold", "Silver", "Platinum"].map((mat) => (
+                {MATERIAL_OPTIONS.map((mat) => (
                   <button key={mat} type="button" onClick={() => setMaterial(mat)}
                     className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition-all ${
                       material === mat
@@ -205,7 +336,7 @@ export default function CollectionsPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Sub Category</label>
               <div className="flex flex-wrap gap-2">
-                {["Diamond", "Necklaces", "Pendants", "Earrings", "Bangles", "Rings", "Bracelets", "Other"].map((cat) => (
+                {categoryOptions.map((cat) => (
                   <button key={cat} type="button" onClick={() => setCategory(cat)}
                     className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition-all ${
                       category === cat
@@ -215,13 +346,29 @@ export default function CollectionsPage() {
                   </button>
                 ))}
               </div>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <input
+                  type="text"
+                  value={newCategoryInput}
+                  onChange={(e) => setNewCategoryInput(e.target.value)}
+                  placeholder="Create sub category"
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition"
+                />
+                <button
+                  type="button"
+                  onClick={() => addCustomCategory(newCategoryInput, "new")}
+                  className="rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-black transition-colors hover:bg-gray-50"
+                >
+                  Add Tag
+                </button>
+              </div>
             </div>
             <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
               <div>
                 <p className="text-sm font-medium text-gray-900">Feature on Homepage</p>
-                <p className="text-xs text-gray-500">Show in the Top 6 showcase</p>
+                <p className="text-xs text-gray-500">Show in the Top 6 showcase ({top6Count}/6 used)</p>
               </div>
-              <button type="button" onClick={() => setIsTop6(!isTop6)}
+              <button type="button" onClick={toggleNewTop6}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isTop6 ? "bg-black" : "bg-gray-300"}`}>
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${isTop6 ? "translate-x-6" : "translate-x-1"}`} />
               </button>
@@ -245,13 +392,100 @@ export default function CollectionsPage() {
 
         {/* Items List */}
         <div>
-          <h2 className="text-gray-900 font-semibold mb-4">All Items <span className="text-gray-400 font-normal text-sm">({items.length})</span></h2>
+          <div className="mb-4 flex flex-col gap-3">
+            <h2 className="text-gray-900 font-semibold">All Items <span className="text-gray-400 font-normal text-sm">({visibleItems.length}/{items.length})</span></h2>
+            <div className="rounded-3xl border border-gray-200 bg-white p-3.5 shadow-sm sm:p-4">
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by catalog name"
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition"
+                />
+
+                <div>
+                  <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-gray-400">Sort</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([
+                      { label: "New to Old", value: "newest" },
+                      { label: "Old to New", value: "oldest" },
+                    ] as const).map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setSortOrder(option.value)}
+                        className={`rounded-2xl px-4 py-3 text-sm font-medium transition-all ${
+                          sortOrder === option.value
+                            ? "bg-black text-white shadow-sm"
+                            : "border border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 hover:text-black"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-gray-400">Material</p>
+                  <div className="hide-scrollbar flex gap-2 overflow-x-auto pb-1">
+                    {["All", ...MATERIAL_OPTIONS].map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => setMaterialFilter(option)}
+                        className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                          materialFilter === option
+                            ? "bg-black text-white shadow-sm"
+                            : "border border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 hover:text-black"
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-gray-400">Sub Categories</p>
+                    {categoryFilter !== "All" && (
+                      <button
+                        type="button"
+                        onClick={() => setCategoryFilter("All")}
+                        className="text-xs font-medium text-gray-500 transition-colors hover:text-black"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <div className="hide-scrollbar flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">
+                    {["All", ...categoryOptions].map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => setCategoryFilter(option)}
+                        className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                          categoryFilter === option
+                            ? "bg-black text-white shadow-sm"
+                            : "border border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 hover:text-black"
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           {loading
             ? <div className="flex items-center gap-3 text-gray-500"><div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />Loading…</div>
-            : items.length === 0
-              ? <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 text-center text-gray-500 shadow-sm">No items yet. Add your first piece!</div>
+            : visibleItems.length === 0
+              ? <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 text-center text-gray-500 shadow-sm">{items.length === 0 ? "No items yet. Add your first piece!" : "No matching items found."}</div>
               : <div className="space-y-3 max-h-[640px] overflow-y-auto pr-1">
-                  {items.map((item) => (
+                  {visibleItems.map((item) => (
                     <div key={item.id} className="flex items-center gap-4 bg-white border border-gray-200 rounded-xl p-3 hover:border-gray-300 transition-colors shadow-sm group">
                       <img src={item.image_url} alt={item.caption}
                         className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-gray-50"
@@ -261,14 +495,30 @@ export default function CollectionsPage() {
                           <input type="text" value={editCaption} onChange={(e) => setEditCaption(e.target.value)} className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-black text-gray-900 bg-white" />
                           <div className="flex flex-wrap items-center gap-3">
                             <select value={editMaterial} onChange={(e) => setEditMaterial(e.target.value)} className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-black text-gray-900 bg-white">
-                              {["Gold", "Silver", "Platinum"].map(c => <option key={c} value={c}>{c}</option>)}
+                              {MATERIAL_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
                             <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-black text-gray-900 bg-white">
-                              {["Diamond", "Necklaces", "Pendants", "Earrings", "Bangles", "Rings", "Bracelets", "Other"].map(c => <option key={c} value={c}>{c}</option>)}
+                              {categoryOptions.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
                             <label className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
-                              <input type="checkbox" checked={editIsTop6} onChange={(e) => setEditIsTop6(e.target.checked)} className="rounded text-black focus:ring-black" /> Top 6
+                              <input type="checkbox" checked={editIsTop6} onChange={(e) => toggleEditTop6(e.target.checked)} className="rounded text-black focus:ring-black" /> Top 6
                             </label>
+                          </div>
+                          <div className="flex flex-col gap-2 sm:flex-row">
+                            <input
+                              type="text"
+                              value={editCategoryInput}
+                              onChange={(e) => setEditCategoryInput(e.target.value)}
+                              placeholder="Create sub category"
+                              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-black"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => addCustomCategory(editCategoryInput, "edit")}
+                              className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-black transition-colors hover:bg-gray-50"
+                            >
+                              Add Tag
+                            </button>
                           </div>
                         </div>
                       ) : (
@@ -276,7 +526,7 @@ export default function CollectionsPage() {
                           <p className="text-gray-900 text-sm font-medium truncate">{item.caption}</p>
                           <div className="flex flex-wrap items-center gap-2 mt-1">
                             {(() => {
-                              const mat = item.material || (["Gold", "Silver", "Platinum"].includes(item.category) ? item.category : "Gold");
+                              const mat = item.material || (MATERIAL_OPTIONS.includes(item.category) ? item.category : "Gold");
                               return (
                                 <>
                                   <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-800 border border-amber-200">{mat}</span>
