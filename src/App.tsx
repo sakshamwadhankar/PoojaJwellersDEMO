@@ -260,41 +260,10 @@ interface Product {
   name: string;          // maps to Firestore `caption`
   material: "Gold" | "Silver";  // maps to Firestore `category`
   category: Category;
-<<<<<<< Updated upstream
-  price: string;
+  price?: string;
   images: string[];  // first image is used as the card thumbnail
-}
-
-const ALL_PRODUCTS: Product[] = [
-  { id: 1, name: "Eternal Gold Pendant", material: "Gold", category: "Pendants", price: "₹45,900", images: ["/images/product-gold-1.jpg"] },
-  { id: 2, name: "Royal Jhumka Earrings", material: "Gold", category: "Earrings", price: "₹38,500", images: ["/images/product-gold-2.jpg"] },
-  { id: 3, name: "Heritage Gold Bangles", material: "Gold", category: "Bangles", price: "₹72,000", images: ["/images/product-gold-3.jpg"] },
-  { id: 4, name: "Minimalist Silver Chain", material: "Silver", category: "Necklaces", price: "₹4,200", images: ["/images/product-silver-1.jpg"] },
-  { id: 5, name: "Silver Elegance Bracelet", material: "Silver", category: "Bracelets", price: "₹6,800", images: ["/images/product-silver-2.jpg"] },
-  { id: 6, name: "Contemporary Silver Rings", material: "Silver", category: "Rings", price: "₹3,500", images: ["/images/product-silver-3.jpg"] },
-  { id: 7, name: "Regal Gold Necklace", material: "Gold", category: "Necklaces", price: "₹1,24,500", images: ["/images/product-gold-1.jpg"] },
-  { id: 8, name: "Temple Gold Jhumka", material: "Gold", category: "Earrings", price: "₹28,900", images: ["/images/product-gold-2.jpg"] },
-  { id: 9, name: "Delicate Gold Bangle Set", material: "Gold", category: "Bangles", price: "₹56,000", images: ["/images/product-gold-3.jpg"] },
-  { id: 10, name: "Silver Filigree Pendant", material: "Silver", category: "Pendants", price: "₹3,800", images: ["/images/product-silver-1.jpg"] },
-  { id: 11, name: "Oxidised Silver Earrings", material: "Silver", category: "Earrings", price: "₹2,200", images: ["/images/product-silver-3.jpg"] },
-  { id: 12, name: "Gold statement Ring", material: "Gold", category: "Rings", price: "₹18,500", images: ["/images/product-gold-2.jpg"] },
-  { id: 13, name: "Gold Charm Bracelet", material: "Gold", category: "Bracelets", price: "₹42,000", images: ["/images/product-gold-1.jpg"] },
-  { id: 14, name: "Silver Cuff Bracelet", material: "Silver", category: "Bracelets", price: "₹5,400", images: ["/images/product-silver-2.jpg"] },
-  { id: 15, name: "Antique Gold Pendant", material: "Gold", category: "Pendants", price: "₹34,200", images: ["/images/product-gold-3.jpg"] },
-  { id: 16, name: "Silver Layered Necklace", material: "Silver", category: "Necklaces", price: "₹7,600", images: ["/images/product-silver-1.jpg"] },
-  { id: 17, name: "Pearl Gold Jhumka", material: "Gold", category: "Earrings", price: "₹44,800", images: ["/images/product-gold-1.jpg"] },
-  { id: 18, name: "Silver Anklet Pair", material: "Silver", category: "Bracelets", price: "₹4,900", images: ["/images/product-silver-2.jpg"] },
-];
-
-/* Featured products for homepage (first 6) */
-const FEATURED = ALL_PRODUCTS.slice(0, 6);
-
-=======
-  image: string;         // maps to Firestore `image_url`
   is_top_6?: boolean;
 }
-
->>>>>>> Stashed changes
 interface Review {
   id: string;
   name: string;          // maps to Firestore `customer_name`
@@ -302,24 +271,6 @@ interface Review {
   rating: number;
 }
 
-<<<<<<< Updated upstream
-const REVIEWS: Review[] = [
-  { id: 1, name: "Mamta Farnandis", text: "Best place to buy gold genuine and trusted good design and low rate and owner is good person humble and polite.", rating: 5 },
-  { id: 2, name: "Mily Chauhan", text: "Great experience wonderful and friendly staff with latest designs definitely visit Pooja jewellers.", rating: 5 },
-  { id: 3, name: "SHIVAJI GAVALI", text: "Best and lowest making charges in Pooja jewellers gittikhadan nagpur.", rating: 5 },
-  { id: 4, name: "Ashwin Gajbhiye", text: "Best jeweller in Nagpur gittikhadan gold and silver.", rating: 5 },
-  { id: 5, name: "Shailesh Motghare", text: "Best gold jewellery in gittikhadan nagpur.", rating: 5 },
-  { id: 6, name: "Poonam Rajput", text: "Unique Design for silver payal & locket for Pooja jewellers palghar.", rating: 5 },
-  { id: 7, name: "Bhavana Kuthe", text: "Best jwellers in nagpur good behaviour.", rating: 5 },
-];
-
-const REEL_VIDEOS = [
-  { src: "/videos/Video-153.mp4", link: "https://www.instagram.com/reel/DWY6cAAiHO-/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" },
-  { src: "/videos/Video-394.mp4", link: "https://www.instagram.com/reel/DRPEdU5CC7B/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" },
-  { src: "/videos/Video-452.mp4", link: "https://www.instagram.com/reel/DYZUinVgK1N/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" },
-  { src: "/videos/Video-738.mp4", link: "https://www.instagram.com/reel/DP57TENiK1j/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" },
-];
-=======
 interface Reel {
   id: string;
   video_url: string;
@@ -359,7 +310,8 @@ function useLiveData(): LiveData {
             name: data.caption ?? "Untitled",
             material: (data.category === "Silver" ? "Silver" : "Gold") as "Gold" | "Silver",
             category: (data.category ?? "Gold") as Category,
-            image: data.image_url ?? "",
+            images: data.image_url ? [data.image_url] : ["/images/placeholder.jpg"],
+            price: data.price ?? "Visit store for pricing",
             is_top_6: data.is_top_6 ?? false,
           };
         });
@@ -406,7 +358,6 @@ function useLiveData(): LiveData {
 
   return { featured, allProducts, reviews, reels, loading };
 }
->>>>>>> Stashed changes
 
 /* ───────────────── landing header ───────────────── */
 
@@ -759,23 +710,15 @@ function ReelsSection({ reels }: { reels: Reel[] }) {
           </button>
           <div ref={scrollRef} className="hide-scrollbar flex gap-4 overflow-x-auto scroll-smooth px-1 pb-2 sm:gap-5">
             <div className="hidden shrink-0 lg:block lg:w-[calc((100%-6*210px-5*20px)/2)]" />
-<<<<<<< Updated upstream
-            {REEL_VIDEOS.map((reel, i) => (
-              <div key={i} className="w-[180px] shrink-0 sm:w-[200px] md:w-[210px]">
-                <a href={reel.link} target="_blank" rel="noopener noreferrer" className="group relative block aspect-[9/16] overflow-hidden rounded-2xl bg-espresso">
-                  <video src={reel.src} autoPlay loop muted playsInline className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-espresso/20 transition-all duration-500 group-hover:bg-espresso/35 opacity-0 group-hover:opacity-100">
-=======
-            {reels.map((reel, i) => (
+            {reels.map((reel) => (
               <div key={reel.id} className="w-[180px] shrink-0 sm:w-[200px] md:w-[210px]">
                 <a href={reel.instagram_link || "https://www.instagram.com/pooja_jewellers_nagpur"} target="_blank" rel="noopener noreferrer" className="group relative block aspect-[9/16] overflow-hidden rounded-2xl bg-espresso">
                   {reel.video_url ? (
-                    <video src={reel.video_url} className="h-full w-full object-cover" muted loop playsInline />
+                    <video src={reel.video_url} autoPlay loop muted playsInline className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
                   ) : (
-                    <div className="h-full w-full bg-espresso/60" />
+                    <div className="h-full w-full bg-espresso/60 transition-transform duration-700 ease-out group-hover:scale-105" />
                   )}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-espresso/20 transition-all duration-500 group-hover:bg-espresso/35">
->>>>>>> Stashed changes
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-espresso/20 transition-all duration-500 group-hover:bg-espresso/35 opacity-0 group-hover:opacity-100">
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/30 bg-white/15 backdrop-blur-sm transition-all duration-300 group-hover:scale-110 group-hover:border-white/50 group-hover:bg-white/25">
                       <Play className="h-6 w-6 ml-0.5 text-white" fill="white" />
                     </div>
