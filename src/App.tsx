@@ -302,10 +302,10 @@ const REVIEWS: Review[] = [
 ];
 
 const REEL_VIDEOS = [
-  "/videos/Video-153.mp4",
-  "/videos/Video-394.mp4",
-  "/videos/Video-452.mp4",
-  "/videos/Video-738.mp4",
+  { src: "/videos/Video-153.mp4", link: "https://www.instagram.com/reel/DWY6cAAiHO-/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" },
+  { src: "/videos/Video-394.mp4", link: "https://www.instagram.com/reel/DRPEdU5CC7B/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" },
+  { src: "/videos/Video-452.mp4", link: "https://www.instagram.com/reel/DYZUinVgK1N/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" },
+  { src: "/videos/Video-738.mp4", link: "https://www.instagram.com/reel/DP57TENiK1j/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" },
 ];
 
 /* ───────────────── landing header ───────────────── */
@@ -661,10 +661,10 @@ function ReelsSection() {
           </button>
           <div ref={scrollRef} className="hide-scrollbar flex gap-4 overflow-x-auto scroll-smooth px-1 pb-2 sm:gap-5">
             <div className="hidden shrink-0 lg:block lg:w-[calc((100%-6*210px-5*20px)/2)]" />
-            {REEL_VIDEOS.map((src, i) => (
+            {REEL_VIDEOS.map((reel, i) => (
               <div key={i} className="w-[180px] shrink-0 sm:w-[200px] md:w-[210px]">
-                <a href="https://www.instagram.com/pooja_jewellers_nagpur" target="_blank" rel="noopener noreferrer" className="group relative block aspect-[9/16] overflow-hidden rounded-2xl bg-espresso">
-                  <video src={src} autoPlay loop muted playsInline className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
+                <a href={reel.link} target="_blank" rel="noopener noreferrer" className="group relative block aspect-[9/16] overflow-hidden rounded-2xl bg-espresso">
+                  <video src={reel.src} autoPlay loop muted playsInline className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-espresso/20 transition-all duration-500 group-hover:bg-espresso/35 opacity-0 group-hover:opacity-100">
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/30 bg-white/15 backdrop-blur-sm transition-all duration-300 group-hover:scale-110 group-hover:border-white/50 group-hover:bg-white/25">
                       <Play className="h-6 w-6 ml-0.5 text-white" fill="white" />
