@@ -82,74 +82,74 @@ export default function CollectionsPage() {
   }
 
   return (
-    <div className="p-8 max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Collections</h1>
-        <p className="text-neutral-400 mt-1 text-sm">Upload jewellery photos and manage the homepage showcase.</p>
+    <div className="py-6 max-w-6xl">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Collections</h1>
+        <p className="text-gray-500 mt-1 text-sm">Upload jewellery photos and manage the homepage showcase.</p>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Upload Form */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-white font-semibold mb-5">Add New Item</h2>
+        <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 shadow-sm">
+          <h2 className="text-gray-900 font-semibold mb-5">Add New Item</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-1.5">Jewellery Photo</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Jewellery Photo</label>
               <div onClick={() => fileRef.current?.click()}
-                className="relative border-2 border-dashed border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-amber-500/40 transition-colors group">
+                className="relative border-2 border-dashed border-gray-300 rounded-xl overflow-hidden cursor-pointer hover:border-black transition-colors group bg-gray-50">
                 {preview
                   ? <img src={preview} alt="Preview" className="w-full h-40 object-cover" />
-                  : <div className="flex flex-col items-center justify-center h-40 text-neutral-500 group-hover:text-amber-400 transition-colors">
+                  : <div className="flex flex-col items-center justify-center h-40 text-gray-400 group-hover:text-black transition-colors">
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       <span className="text-sm">Click to upload image</span>
-                      <span className="text-xs mt-1 text-neutral-600">JPG, PNG, WEBP</span>
+                      <span className="text-xs mt-1 text-gray-500">JPG, PNG, WEBP</span>
                     </div>}
               </div>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-1.5">Caption</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Caption</label>
               <input type="text" value={caption} onChange={(e) => setCaption(e.target.value)}
                 placeholder="e.g. Heritage Polki Choker"
-                className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition text-sm" />
+                className="w-full px-4 py-2.5 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition text-sm" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-1.5">Category</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
               <div className="flex gap-3">
                 {["Gold", "Silver"].map((cat) => (
                   <button key={cat} type="button" onClick={() => setCategory(cat)}
                     className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-all ${
                       category === cat
-                        ? cat === "Gold" ? "bg-amber-500/20 border-amber-500/50 text-amber-400" : "bg-slate-400/20 border-slate-400/50 text-slate-300"
-                        : "bg-white/5 border-white/10 text-neutral-500 hover:text-neutral-300"}`}>
-                    {cat === "Gold" ? "🥇" : "🥈"} {cat}
+                        ? "bg-gray-100 border-gray-300 text-black"
+                        : "bg-white border-gray-200 text-gray-500 hover:text-gray-700"}`}>
+                    {cat}
                   </button>
                 ))}
               </div>
             </div>
-            <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+            <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
               <div>
-                <p className="text-sm font-medium text-neutral-300">Feature on Homepage</p>
-                <p className="text-xs text-neutral-500">Show in the Top 6 showcase</p>
+                <p className="text-sm font-medium text-gray-900">Feature on Homepage</p>
+                <p className="text-xs text-gray-500">Show in the Top 6 showcase</p>
               </div>
               <button type="button" onClick={() => setIsTop6(!isTop6)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isTop6 ? "bg-amber-500" : "bg-white/10"}`}>
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isTop6 ? "bg-black" : "bg-gray-300"}`}>
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${isTop6 ? "translate-x-6" : "translate-x-1"}`} />
               </button>
             </div>
             {uploading && (
               <div>
-                <div className="flex justify-between text-xs text-neutral-400 mb-1"><span>Uploading…</span><span>{progress}%</span></div>
-                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-500 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+                <div className="flex justify-between text-xs text-gray-500 mb-1"><span>Uploading…</span><span>{progress}%</span></div>
+                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-black rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
                 </div>
               </div>
             )}
-            {error && <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2.5">{error}</p>}
-            {success && <p className="text-emerald-400 text-sm bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-2.5">✓ {success}</p>}
+            {error && <p className="text-black text-sm bg-gray-100 border border-gray-300 rounded-xl px-4 py-2.5">{error}</p>}
+            {success && <p className="text-black text-sm bg-gray-100 border border-gray-300 rounded-xl px-4 py-2.5">✓ {success}</p>}
             <button type="submit" disabled={uploading}
-              className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
+              className="w-full py-2.5 bg-black text-white font-semibold rounded-xl transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
               {uploading ? "Uploading…" : "Add to Collection"}
             </button>
           </form>
@@ -157,26 +157,26 @@ export default function CollectionsPage() {
 
         {/* Items List */}
         <div>
-          <h2 className="text-white font-semibold mb-5">All Items <span className="text-neutral-500 font-normal text-sm">({items.length})</span></h2>
+          <h2 className="text-gray-900 font-semibold mb-4">All Items <span className="text-gray-400 font-normal text-sm">({items.length})</span></h2>
           {loading
-            ? <div className="flex items-center gap-3 text-neutral-400"><div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />Loading…</div>
+            ? <div className="flex items-center gap-3 text-gray-500"><div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />Loading…</div>
             : items.length === 0
-              ? <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center text-neutral-500">No items yet. Add your first piece!</div>
+              ? <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 text-center text-gray-500 shadow-sm">No items yet. Add your first piece!</div>
               : <div className="space-y-3 max-h-[640px] overflow-y-auto pr-1">
                   {items.map((item) => (
-                    <div key={item.id} className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-xl p-3 hover:border-white/20 transition-colors group">
+                    <div key={item.id} className="flex items-center gap-4 bg-white border border-gray-200 rounded-xl p-3 hover:border-gray-300 transition-colors shadow-sm group">
                       <img src={item.image_url} alt={item.caption}
-                        className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-white/5"
-                        onError={(e) => { (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' fill='%23222'%3E%3Crect width='56' height='56'/%3E%3C/svg%3E"; }} />
+                        className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-gray-50"
+                        onError={(e) => { (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' fill='%23e5e7eb'%3E%3Crect width='56' height='56'/%3E%3C/svg%3E"; }} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm font-medium truncate">{item.caption}</p>
+                        <p className="text-gray-900 text-sm font-medium truncate">{item.caption}</p>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${item.category === "Gold" ? "bg-amber-500/20 text-amber-400" : "bg-slate-400/20 text-slate-400"}`}>{item.category}</span>
-                          {item.is_top_6 && <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-medium">Top 6</span>}
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${item.category === "Gold" ? "bg-gray-100 text-black" : "bg-gray-100 text-gray-600"}`}>{item.category}</span>
+                          {item.is_top_6 && <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-black font-medium">Top 6</span>}
                         </div>
                       </div>
                       <button onClick={() => handleDelete(item)}
-                        className="p-2 rounded-lg text-neutral-600 hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100">
+                        className="p-2 rounded-lg text-gray-400 hover:text-black hover:bg-gray-100 transition-all opacity-0 group-hover:opacity-100">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
