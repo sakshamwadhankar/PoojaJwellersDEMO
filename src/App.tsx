@@ -84,29 +84,36 @@ function LightboxModal({
   onClose: () => void;
 }) {
   const [visible, setVisible] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(0);
 
   useEffect(() => {
     if (product) {
+      setActiveIdx(0);
       requestAnimationFrame(() => setVisible(true));
       document.body.style.overflow = "hidden";
     } else {
       setVisible(false);
       document.body.style.overflow = "";
     }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [product]);
 
   useEffect(() => {
+    if (!product) return;
+    const images = product.images;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight") setActiveIdx(i => Math.min(i + 1, images.length - 1));
+      if (e.key === "ArrowLeft")  setActiveIdx(i => Math.max(i - 1, 0));
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [onClose, product]);
 
   if (!product) return null;
+
+  const images = product.images;
+  const hasMany = images.length > 1;
 
   return (
     <div
@@ -115,10 +122,7 @@ function LightboxModal({
       }`}
     >
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-espresso/60 backdrop-blur-md"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-espresso/60 backdrop-blur-md" onClick={onClose} />
 
       {/* Modal */}
       <div
@@ -139,13 +143,76 @@ function LightboxModal({
         </button>
 
         {/* Image container */}
-        <div className="overflow-hidden rounded-2xl bg-linen">
+        <div className="relative overflow-hidden rounded-2xl bg-linen">
           <img
-            src={product.image}
-            alt={product.name}
-            className="h-full w-full object-cover"
+            key={activeIdx}
+            src={images[activeIdx]}
+            alt={`${product.name} – photo ${activeIdx + 1}`}
+            className="h-full w-full object-cover transition-opacity duration-300"
           />
+
+          {/* Prev / Next arrows */}
+          {hasMany && (
+            <>
+              <button
+                onClick={() => setActiveIdx(i => Math.max(i - 1, 0))}
+                disabled={activeIdx === 0}
+                className="absolute left-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-xl border border-white/20 bg-espresso/50 text-white backdrop-blur-sm transition-all duration-200 hover:bg-espresso/80 disabled:opacity-20"
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="h-5 w-5" strokeWidth={1.5} />
+              </button>
+              <button
+                onClick={() => setActiveIdx(i => Math.min(i + 1, images.length - 1))}
+                disabled={activeIdx === images.length - 1}
+                className="absolute right-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-xl border border-white/20 bg-espresso/50 text-white backdrop-blur-sm transition-all duration-200 hover:bg-espresso/80 disabled:opacity-20"
+                aria-label="Next image"
+              >
+                <ChevronRight className="h-5 w-5" strokeWidth={1.5} />
+              </button>
+            </>
+          )}
+
+          {/* Image counter badge */}
+          {hasMany && (
+            <span className="absolute top-3 right-3 rounded-xl border border-white/20 bg-espresso/60 px-2.5 py-1 font-sans text-[10px] font-semibold text-white/80 backdrop-blur-sm">
+              {activeIdx + 1} / {images.length}
+            </span>
+          )}
         </div>
+
+        {/* Dot indicators */}
+        {hasMany && (
+          <div className="mt-4 flex justify-center gap-2">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveIdx(i)}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === activeIdx ? "w-6 bg-camel" : "w-1.5 bg-white/30 hover:bg-white/60"
+                }`}
+                aria-label={`Go to image ${i + 1}`}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Thumbnail strip */}
+        {hasMany && (
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+            {images.map((src, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveIdx(i)}
+                className={`h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-200 ${
+                  i === activeIdx ? "border-camel" : "border-transparent opacity-50 hover:opacity-80"
+                }`}
+              >
+                <img src={src} alt="" className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Product info */}
         <div className="mt-6 text-center">
@@ -190,28 +257,28 @@ interface Product {
   material: "Gold" | "Silver";
   category: Category;
   price: string;
-  image: string;
+  images: string[];  // first image is used as the card thumbnail
 }
 
 const ALL_PRODUCTS: Product[] = [
-  { id: 1, name: "Eternal Gold Pendant", material: "Gold", category: "Pendants", price: "₹45,900", image: "/images/product-gold-1.jpg" },
-  { id: 2, name: "Royal Jhumka Earrings", material: "Gold", category: "Earrings", price: "₹38,500", image: "/images/product-gold-2.jpg" },
-  { id: 3, name: "Heritage Gold Bangles", material: "Gold", category: "Bangles", price: "₹72,000", image: "/images/product-gold-3.jpg" },
-  { id: 4, name: "Minimalist Silver Chain", material: "Silver", category: "Necklaces", price: "₹4,200", image: "/images/product-silver-1.jpg" },
-  { id: 5, name: "Silver Elegance Bracelet", material: "Silver", category: "Bracelets", price: "₹6,800", image: "/images/product-silver-2.jpg" },
-  { id: 6, name: "Contemporary Silver Rings", material: "Silver", category: "Rings", price: "₹3,500", image: "/images/product-silver-3.jpg" },
-  { id: 7, name: "Regal Gold Necklace", material: "Gold", category: "Necklaces", price: "₹1,24,500", image: "/images/product-gold-1.jpg" },
-  { id: 8, name: "Temple Gold Jhumka", material: "Gold", category: "Earrings", price: "₹28,900", image: "/images/product-gold-2.jpg" },
-  { id: 9, name: "Delicate Gold Bangle Set", material: "Gold", category: "Bangles", price: "₹56,000", image: "/images/product-gold-3.jpg" },
-  { id: 10, name: "Silver Filigree Pendant", material: "Silver", category: "Pendants", price: "₹3,800", image: "/images/product-silver-1.jpg" },
-  { id: 11, name: "Oxidised Silver Earrings", material: "Silver", category: "Earrings", price: "₹2,200", image: "/images/product-silver-3.jpg" },
-  { id: 12, name: "Gold statement Ring", material: "Gold", category: "Rings", price: "₹18,500", image: "/images/product-gold-2.jpg" },
-  { id: 13, name: "Gold Charm Bracelet", material: "Gold", category: "Bracelets", price: "₹42,000", image: "/images/product-gold-1.jpg" },
-  { id: 14, name: "Silver Cuff Bracelet", material: "Silver", category: "Bracelets", price: "₹5,400", image: "/images/product-silver-2.jpg" },
-  { id: 15, name: "Antique Gold Pendant", material: "Gold", category: "Pendants", price: "₹34,200", image: "/images/product-gold-3.jpg" },
-  { id: 16, name: "Silver Layered Necklace", material: "Silver", category: "Necklaces", price: "₹7,600", image: "/images/product-silver-1.jpg" },
-  { id: 17, name: "Pearl Gold Jhumka", material: "Gold", category: "Earrings", price: "₹44,800", image: "/images/product-gold-1.jpg" },
-  { id: 18, name: "Silver Anklet Pair", material: "Silver", category: "Bracelets", price: "₹4,900", image: "/images/product-silver-2.jpg" },
+  { id: 1, name: "Eternal Gold Pendant", material: "Gold", category: "Pendants", price: "₹45,900", images: ["/images/product-gold-1.jpg"] },
+  { id: 2, name: "Royal Jhumka Earrings", material: "Gold", category: "Earrings", price: "₹38,500", images: ["/images/product-gold-2.jpg"] },
+  { id: 3, name: "Heritage Gold Bangles", material: "Gold", category: "Bangles", price: "₹72,000", images: ["/images/product-gold-3.jpg"] },
+  { id: 4, name: "Minimalist Silver Chain", material: "Silver", category: "Necklaces", price: "₹4,200", images: ["/images/product-silver-1.jpg"] },
+  { id: 5, name: "Silver Elegance Bracelet", material: "Silver", category: "Bracelets", price: "₹6,800", images: ["/images/product-silver-2.jpg"] },
+  { id: 6, name: "Contemporary Silver Rings", material: "Silver", category: "Rings", price: "₹3,500", images: ["/images/product-silver-3.jpg"] },
+  { id: 7, name: "Regal Gold Necklace", material: "Gold", category: "Necklaces", price: "₹1,24,500", images: ["/images/product-gold-1.jpg"] },
+  { id: 8, name: "Temple Gold Jhumka", material: "Gold", category: "Earrings", price: "₹28,900", images: ["/images/product-gold-2.jpg"] },
+  { id: 9, name: "Delicate Gold Bangle Set", material: "Gold", category: "Bangles", price: "₹56,000", images: ["/images/product-gold-3.jpg"] },
+  { id: 10, name: "Silver Filigree Pendant", material: "Silver", category: "Pendants", price: "₹3,800", images: ["/images/product-silver-1.jpg"] },
+  { id: 11, name: "Oxidised Silver Earrings", material: "Silver", category: "Earrings", price: "₹2,200", images: ["/images/product-silver-3.jpg"] },
+  { id: 12, name: "Gold statement Ring", material: "Gold", category: "Rings", price: "₹18,500", images: ["/images/product-gold-2.jpg"] },
+  { id: 13, name: "Gold Charm Bracelet", material: "Gold", category: "Bracelets", price: "₹42,000", images: ["/images/product-gold-1.jpg"] },
+  { id: 14, name: "Silver Cuff Bracelet", material: "Silver", category: "Bracelets", price: "₹5,400", images: ["/images/product-silver-2.jpg"] },
+  { id: 15, name: "Antique Gold Pendant", material: "Gold", category: "Pendants", price: "₹34,200", images: ["/images/product-gold-3.jpg"] },
+  { id: 16, name: "Silver Layered Necklace", material: "Silver", category: "Necklaces", price: "₹7,600", images: ["/images/product-silver-1.jpg"] },
+  { id: 17, name: "Pearl Gold Jhumka", material: "Gold", category: "Earrings", price: "₹44,800", images: ["/images/product-gold-1.jpg"] },
+  { id: 18, name: "Silver Anklet Pair", material: "Silver", category: "Bracelets", price: "₹4,900", images: ["/images/product-silver-2.jpg"] },
 ];
 
 /* Featured products for homepage (first 6) */
@@ -234,13 +301,11 @@ const REVIEWS: Review[] = [
   { id: 7, name: "Bhavana Kuthe", text: "Best jwellers in nagpur good behaviour.", rating: 5 },
 ];
 
-const REEL_IMAGES = [
-  "/images/reel-1.jpg",
-  "/images/reel-2.jpg",
-  "/images/reel-3.jpg",
-  "/images/hero.jpg",
-  "/images/product-gold-2.jpg",
-  "/images/product-silver-2.jpg",
+const REEL_VIDEOS = [
+  "/videos/Video-153.mp4",
+  "/videos/Video-394.mp4",
+  "/videos/Video-452.mp4",
+  "/videos/Video-738.mp4",
 ];
 
 /* ───────────────── landing header ───────────────── */
@@ -428,7 +493,7 @@ function ProductCard({ product }: { product: Product }) {
       onClick={() => open(product)}
     >
       <div className="relative aspect-square overflow-hidden rounded-2xl bg-linen">
-        <img src={product.image} alt={product.name} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" loading="lazy" />
+        <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" loading="lazy" />
         <span className={`absolute top-4 left-4 rounded-xl border font-sans text-[10px] font-semibold uppercase tracking-[.12em] px-3 py-1.5 ${
           product.material === "Gold"
             ? "border-camel/30 bg-white/80 text-cocoa backdrop-blur-sm"
@@ -436,6 +501,13 @@ function ProductCard({ product }: { product: Product }) {
         }`}>
           {product.material}
         </span>
+        {/* Multi-image indicator */}
+        {product.images.length > 1 && (
+          <span className="absolute bottom-3 right-3 flex items-center gap-1 rounded-xl border border-white/20 bg-espresso/60 px-2 py-1 font-sans text-[10px] font-semibold text-white/80 backdrop-blur-sm">
+            <svg viewBox="0 0 16 16" className="h-3 w-3" fill="currentColor"><path d="M2 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4z"/><path d="M0 6a2 2 0 0 1 2-2v1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1h1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6z"/></svg>
+            {product.images.length}
+          </span>
+        )}
       </div>
       <div className="pt-5 pb-2">
         <h3 className="font-serif text-lg font-semibold text-espresso transition-colors duration-300 group-hover:text-camel md:text-xl">
@@ -589,11 +661,11 @@ function ReelsSection() {
           </button>
           <div ref={scrollRef} className="hide-scrollbar flex gap-4 overflow-x-auto scroll-smooth px-1 pb-2 sm:gap-5">
             <div className="hidden shrink-0 lg:block lg:w-[calc((100%-6*210px-5*20px)/2)]" />
-            {REEL_IMAGES.map((src, i) => (
+            {REEL_VIDEOS.map((src, i) => (
               <div key={i} className="w-[180px] shrink-0 sm:w-[200px] md:w-[210px]">
                 <a href="https://www.instagram.com/pooja_jewellers_nagpur" target="_blank" rel="noopener noreferrer" className="group relative block aspect-[9/16] overflow-hidden rounded-2xl bg-espresso">
-                  <img src={src} alt={`Reel ${i + 1}`} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" loading="lazy" />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-espresso/20 transition-all duration-500 group-hover:bg-espresso/35">
+                  <video src={src} autoPlay loop muted playsInline className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-espresso/20 transition-all duration-500 group-hover:bg-espresso/35 opacity-0 group-hover:opacity-100">
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/30 bg-white/15 backdrop-blur-sm transition-all duration-300 group-hover:scale-110 group-hover:border-white/50 group-hover:bg-white/25">
                       <Play className="h-6 w-6 ml-0.5 text-white" fill="white" />
                     </div>
@@ -603,7 +675,7 @@ function ReelsSection() {
                 <p className="mt-3 text-center font-sans text-[10px] font-medium uppercase tracking-wider text-cocoa/60">@pooja_jewellers_nagpur</p>
               </div>
             ))}
-            <div className="hidden shrink-0 lg:block lg:w-[calc((100%-6*210px-5*20px)/2)]" />
+            <div className="hidden shrink-0 lg:block lg:w-[calc((100%-4*210px-3*20px)/2)]" />
           </div>
         </div>
         <div className="mt-14 text-center">
