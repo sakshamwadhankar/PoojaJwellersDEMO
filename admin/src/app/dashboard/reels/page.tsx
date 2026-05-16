@@ -77,8 +77,15 @@ function SortableReel({ reel, handleDelete }: { reel: Reel, handleDelete: (r: Re
             </a>
           </div>
         </div>
-        <button onClick={() => handleDelete(reel)}
-          className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-gray-100 transition-all opacity-0 group-hover:opacity-100 flex-shrink-0 mt-1">
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDelete(reel);
+          }}
+          className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-gray-100 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 flex-shrink-0 mt-1"
+        >
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
@@ -92,8 +99,10 @@ export default function ReelsPage() {
   const { data: reels = [], mutate, isLoading } = useSWR("reels", fetchReels);
   
   const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState(""); const [success, setSuccess] = useState("");
+  const [reelToDelete, setReelToDelete] = useState<Reel | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Form
@@ -107,6 +116,10 @@ export default function ReelsPage() {
 
   function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]; if (!f) return; setFile(f);
+  }
+
+  function requestDelete(reel: Reel) {
+    setReelToDelete(reel);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -141,14 +154,22 @@ export default function ReelsPage() {
   }
 
   async function handleDelete(reel: Reel) {
-    if (!confirm("Delete this reel?")) return;
+    setDeleting(true);
+    setError("");
+    setSuccess("");
     try {
       if (reel.video_url.includes("firebasestorage")) {
         try { await deleteObject(ref(storage, reel.video_url)); } catch { /* ignore */ }
       }
       await deleteDoc(doc(db, "reels", reel.id));
       mutate(reels.filter((r) => r.id !== reel.id), false); // optimistic update
-    } catch { alert("Failed to delete."); }
+      setSuccess("Reel deleted.");
+      setReelToDelete(null);
+    } catch {
+      setError("Failed to delete reel.");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   async function handleDragEnd(event: DragEndEvent) {
@@ -178,6 +199,35 @@ export default function ReelsPage() {
 
   return (
     <div className="py-6 max-w-5xl">
+      {reelToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900">Delete reel?</h3>
+            <p className="mt-2 text-sm text-gray-500">
+              This action will permanently remove this reel from the admin panel.
+            </p>
+            <div className="mt-5 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+                onClick={() => setReelToDelete(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white transition-opacity disabled:opacity-50"
+                onClick={() => handleDelete(reelToDelete)}
+                disabled={deleting}
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Reels</h1>
         <p className="text-gray-500 mt-1 text-sm">Manage video reels. Upload MP4s (max 6 reels). Drag to reorder.</p>
@@ -236,7 +286,7 @@ export default function ReelsPage() {
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={reels.map(r => r.id)} strategy={verticalListSortingStrategy}>
                       {reels.map((reel) => (
-                        <SortableReel key={reel.id} reel={reel} handleDelete={handleDelete} />
+                        <SortableReel key={reel.id} reel={reel} handleDelete={requestDelete} />
                       ))}
                     </SortableContext>
                   </DndContext>
