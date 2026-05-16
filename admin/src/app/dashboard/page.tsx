@@ -42,7 +42,7 @@ async function getFolderUsage(path: string): Promise<{ bytes: number; files: num
 }
 
 export default function DashboardPage() {
-  const [counts, setCounts] = useState({ collections: "—", reviews: "—", reels: "—" });
+  const [counts, setCounts] = useState({ collections: "-", reviews: "-", reels: "-" });
   const [storageSummary, setStorageSummary] = useState<StorageSummary | null>(null);
   const [storageError, setStorageError] = useState("");
 
@@ -83,22 +83,16 @@ export default function DashboardPage() {
   ];
 
   const totalStorageBytes = (storageSummary?.collectionsBytes || 0) + (storageSummary?.reelsBytes || 0);
-  const totalStorageFiles = (storageSummary?.collectionsFiles || 0) + (storageSummary?.reelsFiles || 0);
   const usageCards = [
     {
       label: "Catalog Storage",
-      value: storageSummary ? formatBytes(storageSummary.collectionsBytes) : "—",
+      value: storageSummary ? formatBytes(storageSummary.collectionsBytes) : "-",
       meta: storageSummary ? `${storageSummary.collectionsFiles} file${storageSummary.collectionsFiles === 1 ? "" : "s"}` : "Loading...",
     },
     {
       label: "Reels Storage",
-      value: storageSummary ? formatBytes(storageSummary.reelsBytes) : "—",
+      value: storageSummary ? formatBytes(storageSummary.reelsBytes) : "-",
       meta: storageSummary ? `${storageSummary.reelsFiles} file${storageSummary.reelsFiles === 1 ? "" : "s"}` : "Loading...",
-    },
-    {
-      label: "Total Firebase Usage",
-      value: storageSummary ? formatBytes(totalStorageBytes) : "—",
-      meta: storageSummary ? `${totalStorageFiles} uploaded assets` : "Loading...",
     },
   ];
 
@@ -141,28 +135,16 @@ export default function DashboardPage() {
             {storageError}
           </div>
         ) : (
-          <div className="space-y-3">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {usageCards.slice(0, 2).map((card) => (
-                <div key={card.label} className="rounded-2xl border border-gray-100 bg-gray-50/70 p-4">
-                  <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-gray-400">
-                    {card.label}
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-gray-900">{card.value}</p>
-                  <p className="mt-1 text-xs text-gray-500">{card.meta}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="rounded-2xl border border-gray-100 bg-gray-50/70 p-4">
-              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-gray-400">
-                {usageCards[2].label}
-              </p>
-              <div className="mt-2 flex items-end justify-between gap-3">
-                <p className="text-2xl font-semibold text-gray-900">{usageCards[2].value}</p>
-                <p className="text-xs text-gray-500">{usageCards[2].meta}</p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {usageCards.map((card) => (
+              <div key={card.label} className="rounded-2xl border border-gray-100 bg-gray-50/70 p-4">
+                <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-gray-400">
+                  {card.label}
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-gray-900">{card.value}</p>
+                <p className="mt-1 text-xs text-gray-500">{card.meta}</p>
               </div>
-            </div>
+            ))}
           </div>
         )}
       </section>
