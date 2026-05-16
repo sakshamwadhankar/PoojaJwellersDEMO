@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef, ChangeEvent } from "react";
 import {
-  collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy,
+  collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy, updateDoc
 } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
 
 interface JewelleryItem {
-  id: string; caption: string; category: string;
+  id: string; caption: string; category: string; material?: string;
   image_url: string; is_top_6: boolean;
 }
 
@@ -21,9 +21,40 @@ export default function CollectionsPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [caption, setCaption] = useState("");
-  const [category, setCategory] = useState("Gold");
+  const [category, setCategory] = useState("Diamond");
+  const [material, setMaterial] = useState("Gold");
   const [isTop6, setIsTop6] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editCaption, setEditCaption] = useState("");
+  const [editCategory, setEditCategory] = useState("Diamond");
+  const [editMaterial, setEditMaterial] = useState("Gold");
+  const [editIsTop6, setEditIsTop6] = useState(false);
+
+  function startEdit(item: JewelleryItem) {
+    setEditingId(item.id);
+    setEditCaption(item.caption);
+    setEditCategory(item.category);
+    setEditMaterial(item.material || "Gold");
+    setEditIsTop6(item.is_top_6);
+  }
+
+  async function handleSaveEdit() {
+    if (!editingId) return;
+    try {
+      await updateDoc(doc(db, "collections", editingId), {
+        caption: editCaption.trim(),
+        category: editCategory,
+        material: editMaterial,
+        is_top_6: editIsTop6,
+      });
+      setItems(items.map(i => i.id === editingId ? { ...i, caption: editCaption.trim(), category: editCategory, material: editMaterial, is_top_6: editIsTop6 } : i));
+      setEditingId(null);
+    } catch {
+      alert("Failed to update item.");
+    }
+  }
 
   async function fetchItems() {
     setLoading(true);
@@ -60,11 +91,11 @@ export default function CollectionsPage() {
         );
       });
       await addDoc(collection(db, "collections"), {
-        caption: caption.trim(), category, image_url: downloadURL,
+        caption: caption.trim(), category, material, image_url: downloadURL,
         is_top_6: isTop6, created_at: serverTimestamp(),
       });
       setSuccess("Item added successfully!");
-      setCaption(""); setCategory("Gold"); setIsTop6(false);
+      setCaption(""); setCategory("Diamond"); setMaterial("Gold"); setIsTop6(false);
       setFile(null); setPreview(null); setProgress(0);
       if (fileRef.current) fileRef.current.value = "";
       fetchItems();
@@ -115,11 +146,25 @@ export default function CollectionsPage() {
                 className="w-full px-4 py-2.5 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition text-sm" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
-              <div className="flex gap-3">
-                {["Gold", "Silver"].map((cat) => (
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Main Category (Material)</label>
+              <div className="flex flex-wrap gap-2">
+                {["Gold", "Silver", "Platinum"].map((mat) => (
+                  <button key={mat} type="button" onClick={() => setMaterial(mat)}
+                    className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition-all ${
+                      material === mat
+                        ? "bg-gray-100 border-gray-300 text-black"
+                        : "bg-white border-gray-200 text-gray-500 hover:text-gray-700"}`}>
+                    {mat}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Sub Category</label>
+              <div className="flex flex-wrap gap-2">
+                {["Diamond", "Necklaces", "Pendants", "Earrings", "Bangles", "Rings", "Bracelets", "Other"].map((cat) => (
                   <button key={cat} type="button" onClick={() => setCategory(cat)}
-                    className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-all ${
+                    className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition-all ${
                       category === cat
                         ? "bg-gray-100 border-gray-300 text-black"
                         : "bg-white border-gray-200 text-gray-500 hover:text-gray-700"}`}>
@@ -168,19 +213,61 @@ export default function CollectionsPage() {
                       <img src={item.image_url} alt={item.caption}
                         className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-gray-50"
                         onError={(e) => { (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' fill='%23e5e7eb'%3E%3Crect width='56' height='56'/%3E%3C/svg%3E"; }} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-gray-900 text-sm font-medium truncate">{item.caption}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${item.category === "Gold" ? "bg-gray-100 text-black" : "bg-gray-100 text-gray-600"}`}>{item.category}</span>
-                          {item.is_top_6 && <span className="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-black font-medium">Top 6</span>}
+                      {editingId === item.id ? (
+                        <div className="flex-1 min-w-0 space-y-2">
+                          <input type="text" value={editCaption} onChange={(e) => setEditCaption(e.target.value)} className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-black text-gray-900 bg-white" />
+                          <div className="flex flex-wrap items-center gap-3">
+                            <select value={editMaterial} onChange={(e) => setEditMaterial(e.target.value)} className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-black text-gray-900 bg-white">
+                              {["Gold", "Silver", "Platinum"].map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                            <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-black text-gray-900 bg-white">
+                              {["Diamond", "Necklaces", "Pendants", "Earrings", "Bangles", "Rings", "Bracelets", "Other"].map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                            <label className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                              <input type="checkbox" checked={editIsTop6} onChange={(e) => setEditIsTop6(e.target.checked)} className="rounded text-black focus:ring-black" /> Top 6
+                            </label>
+                          </div>
                         </div>
+                      ) : (
+                        <div className="flex-1 min-w-0">
+                          <p className="text-gray-900 text-sm font-medium truncate">{item.caption}</p>
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                            {(() => {
+                              const mat = item.material || (["Gold", "Silver", "Platinum"].includes(item.category) ? item.category : "Gold");
+                              return (
+                                <>
+                                  <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-800 border border-amber-200">{mat}</span>
+                                  {item.category && item.category !== mat && (
+                                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-slate-100 text-slate-800 border border-slate-200">{item.category}</span>
+                                  )}
+                                </>
+                              );
+                            })()}
+                            {item.is_top_6 && <span className="text-xs px-2 py-0.5 rounded-full bg-black text-white font-medium">Top 6</span>}
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {editingId === item.id ? (
+                          <>
+                            <button onClick={handleSaveEdit} className="p-2 text-green-600 hover:bg-green-50 rounded-lg" title="Save">✓</button>
+                            <button onClick={() => setEditingId(null)} className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg" title="Cancel">✕</button>
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={() => startEdit(item)} className="p-2 rounded-lg text-gray-400 hover:text-black hover:bg-gray-100 transition-all">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                            </button>
+                            <button onClick={() => handleDelete(item)} className="p-2 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-all">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </>
+                        )}
                       </div>
-                      <button onClick={() => handleDelete(item)}
-                        className="p-2 rounded-lg text-gray-400 hover:text-black hover:bg-gray-100 transition-all opacity-0 group-hover:opacity-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
                     </div>
                   ))}
                 </div>}

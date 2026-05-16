@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
 
 export default function DashboardLayout({
   children,
@@ -13,10 +14,14 @@ export default function DashboardLayout({
 }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace("/login");
+      const timeoutId = setTimeout(() => {
+        router.replace("/login");
+      }, 0);
+      return () => clearTimeout(timeoutId);
     }
   }, [user, loading, router]);
 
@@ -58,15 +63,16 @@ export default function DashboardLayout({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button className="w-8 h-8 flex items-center justify-center text-black">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+
+          <button
+            className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-wide text-black shadow-sm"
+            onClick={handleSignOut}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6A2.25 2.25 0 005.25 5.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18 12H9m0 0l3-3m-3 3l3 3" />
             </svg>
-          </button>
-          <button className="w-8 h-8 flex items-center justify-center text-black" onClick={handleSignOut}>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
+            Logout
           </button>
         </div>
       </header>
@@ -111,16 +117,16 @@ export default function DashboardLayout({
       {/* Mobile Bottom Floating Nav */}
       <div className="md:hidden fixed bottom-4 left-4 right-4 z-50">
         <div className="bg-white rounded-[2rem] shadow-xl shadow-black/5 border border-gray-100 px-5 py-3 flex items-center justify-between">
-           <MobileNavItem href="/dashboard" active>
+           <MobileNavItem href="/dashboard" active={pathname === "/dashboard"}>
              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z" /><path d="m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 0 .091-.086L12 5.432Z" /></svg>
            </MobileNavItem>
-           <MobileNavItem href="/dashboard/collections">
+           <MobileNavItem href="/dashboard/collections" active={pathname === "/dashboard/collections"}>
              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
            </MobileNavItem>
-           <MobileNavItem href="/dashboard/reviews">
+           <MobileNavItem href="/dashboard/reviews" active={pathname === "/dashboard/reviews"}>
              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" /></svg>
            </MobileNavItem>
-           <MobileNavItem href="/dashboard/reels">
+           <MobileNavItem href="/dashboard/reels" active={pathname === "/dashboard/reels"}>
              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" d="M15.75 10.5l4.72-2.68a.75.75 0 011.13.65v7.06a.75.75 0 01-1.13.65l-4.72-2.68M4.5 19.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H4.5A2.25 2.25 0 002.25 6.75v10.5A2.25 2.25 0 004.5 19.5z" /></svg>
            </MobileNavItem>
         </div>
@@ -139,7 +145,7 @@ function NavItem({
   label: string;
 }) {
   return (
-    <a
+    <Link
       href={href}
       className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-500 hover:text-black hover:bg-gray-100 transition-all duration-150 text-sm font-medium group"
     >
@@ -147,14 +153,14 @@ function NavItem({
         {icon}
       </svg>
       {label}
-    </a>
+    </Link>
   );
 }
 
 function MobileNavItem({ href, active, children }: { href: string; active?: boolean; children: React.ReactNode }) {
   return (
-    <a href={href} className={`flex h-11 w-11 items-center justify-center rounded-full transition-all duration-300 ${active ? "bg-black text-white shadow-md" : "text-gray-400 hover:bg-gray-100 hover:text-gray-900"}`}>
+    <Link href={href} className={`flex h-11 w-11 items-center justify-center rounded-full transition-all duration-300 ${active ? "bg-black text-white shadow-md" : "text-gray-400 hover:bg-gray-100 hover:text-gray-900"}`}>
       {children}
-    </a>
+    </Link>
   );
 }

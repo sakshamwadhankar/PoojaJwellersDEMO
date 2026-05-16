@@ -239,18 +239,18 @@ function LightboxModal({
 
 /* ───────────────── data ───────────────── */
 
-type Category = "All" | "Gold" | "Silver" | "Necklaces" | "Earrings" | "Bangles" | "Rings" | "Bracelets" | "Pendants";
+type Category = "All" | "Diamond" | "Necklaces" | "Earrings" | "Bangles" | "Rings" | "Bracelets" | "Pendants" | "Other";
 
 const CATEGORIES: Category[] = [
   "All",
-  "Gold",
-  "Silver",
+  "Diamond",
   "Necklaces",
   "Pendants",
   "Earrings",
   "Bangles",
   "Rings",
   "Bracelets",
+  "Other",
 ];
 
 /* ── Firestore data types ── */
@@ -258,8 +258,8 @@ const CATEGORIES: Category[] = [
 interface Product {
   id: string;
   name: string;          // maps to Firestore `caption`
-  material: "Gold" | "Silver";  // maps to Firestore `category`
   category: Category;
+  material?: string;
   price?: string;
   images: string[];  // first image is used as the card thumbnail
   is_top_6?: boolean;
@@ -308,8 +308,8 @@ function useLiveData(): LiveData {
           return {
             id: d.id,
             name: data.caption ?? "Untitled",
-            material: (data.category === "Silver" ? "Silver" : "Gold") as "Gold" | "Silver",
-            category: (data.category ?? "Gold") as Category,
+            category: (data.category ?? "Diamond") as Category,
+            material: data.material ?? "Gold",
             images: data.image_url ? [data.image_url] : ["/images/placeholder.jpg"],
             price: data.price ?? "Visit store for pricing",
             is_top_6: data.is_top_6 ?? false,
@@ -857,14 +857,20 @@ function Footer() {
 /* ───────────────── full collection page ───────────────── */
 
 function CollectionPage({ allProducts }: { allProducts: Product[] }) {
+  const [activeMaterial, setActiveMaterial] = useState<string>("All");
   const [activeCategory, setActiveCategory] = useState<Category>("All");
   const categoriesRef = useRef<HTMLDivElement>(null);
+  const materialsRef = useRef<HTMLDivElement>(null);
 
-  const filtered = activeCategory === "All"
-    ? allProducts
-    : activeCategory === "Gold" || activeCategory === "Silver"
-      ? allProducts.filter((p) => p.material === activeCategory)
-      : allProducts.filter((p) => p.category === activeCategory);
+  const MATERIALS = ["All", "Gold", "Silver", "Platinum"];
+
+  let filtered = allProducts;
+  if (activeMaterial !== "All") {
+    filtered = filtered.filter((p) => p.material === activeMaterial);
+  }
+  if (activeCategory !== "All") {
+    filtered = filtered.filter((p) => p.category === activeCategory);
+  }
 
   /* Scroll category into view when selected */
   useEffect(() => {
@@ -885,19 +891,43 @@ function CollectionPage({ allProducts }: { allProducts: Product[] }) {
         </div>
       </div>
 
-      {/* Category filter bar — horizontal scroll */}
+      {/* Material filter bar */}
       <div className="sticky top-[60px] z-40 bg-white/80 backdrop-blur-xl border-b border-khaki/15">
         <div className="mx-auto max-w-7xl px-6 lg:px-10">
           <div
-            ref={categoriesRef}
+            ref={materialsRef}
             className="hide-scrollbar flex gap-2 overflow-x-auto py-4 sm:gap-3"
+          >
+            {MATERIALS.map((mat) => (
+              <button
+                key={mat}
+                onClick={() => setActiveMaterial(mat)}
+                className={`shrink-0 rounded-2xl border px-6 py-3 font-sans text-xs font-semibold uppercase tracking-[.15em] transition-all duration-300 ${
+                  activeMaterial === mat
+                    ? "border-espresso bg-espresso text-white shadow-md"
+                    : "border-khaki/40 bg-white text-cocoa hover:border-espresso/50 hover:bg-linen hover:text-espresso"
+                }`}
+              >
+                {mat}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Category filter bar — horizontal scroll */}
+      <div className="sticky top-[138px] z-30 bg-white/90 backdrop-blur-xl border-b border-khaki/15">
+        <div className="mx-auto max-w-7xl px-6 lg:px-10">
+          <div
+            ref={categoriesRef}
+            className="hide-scrollbar flex gap-2 overflow-x-auto py-3 sm:gap-3"
           >
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
                 data-cat={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`shrink-0 rounded-2xl border px-5 py-2.5 font-sans text-[11px] font-semibold uppercase tracking-[.12em] transition-all duration-300 ${
+                className={`shrink-0 rounded-2xl border px-4 py-2 font-sans text-[11px] font-semibold uppercase tracking-[.12em] transition-all duration-300 ${
                   activeCategory === cat
                     ? "border-camel bg-camel text-white"
                     : "border-khaki/40 bg-transparent text-cocoa hover:border-camel/50 hover:text-espresso"
@@ -914,8 +944,11 @@ function CollectionPage({ allProducts }: { allProducts: Product[] }) {
       <div className="mx-auto max-w-7xl px-6 pt-8 pb-2 lg:px-10">
         <p className="font-sans text-xs tracking-wider text-cocoa/50">
           Showing <span className="font-semibold text-espresso">{filtered.length}</span> {filtered.length === 1 ? "piece" : "pieces"}
+          {activeMaterial !== "All" && (
+            <span> in <span className="font-semibold text-espresso">{activeMaterial}</span></span>
+          )}
           {activeCategory !== "All" && (
-            <span> in <span className="font-semibold text-camel">{activeCategory}</span></span>
+            <span> for <span className="font-semibold text-camel">{activeCategory}</span></span>
           )}
         </p>
       </div>

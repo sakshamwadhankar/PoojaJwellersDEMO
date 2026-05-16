@@ -37,18 +37,12 @@ export default function DashboardPage() {
     <div className="py-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-semibold text-gray-900">Dashboard</h2>
-        <button className="text-gray-400 p-1">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" /></svg>
-        </button>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
         {stats.map((stat, i) => (
           <div key={i} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between h-32 relative group hover:shadow-md transition-all">
-            <div className="absolute top-4 right-4 text-gray-400 group-hover:text-black transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
-            </div>
             <div className="mt-auto text-3xl sm:text-4xl font-semibold text-gray-900">{stat.value}</div>
             <div className="text-xs font-medium text-gray-400 mt-1">{stat.label}</div>
           </div>
@@ -59,12 +53,6 @@ export default function DashboardPage() {
       <div className="bg-white rounded-[2rem] p-5 shadow-sm border border-gray-100">
         <div className="flex items-center justify-between mb-6 px-1">
           <h2 className="text-sm font-semibold text-gray-900">Quick Actions</h2>
-          <div className="flex items-center gap-2">
-            <button className="text-gray-400 p-1"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" /></svg></button>
-            <button className="bg-black text-white rounded-full w-7 h-7 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-            </button>
-          </div>
         </div>
 
         <div className="space-y-4">
