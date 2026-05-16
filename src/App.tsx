@@ -504,7 +504,7 @@ function Hero() {
 
   return (
     <section id="home" className="relative flex min-h-screen items-center justify-center overflow-hidden">
-      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('https://pooja-jewellers-app-123.web.app/images/hero.jpg')" }} />
+      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('/images/hero.jpg')" }} />
       <div className="absolute inset-0 bg-linen/75" />
       <div className="absolute inset-0 bg-gradient-to-t from-linen via-linen/40 to-linen/80" />
 
