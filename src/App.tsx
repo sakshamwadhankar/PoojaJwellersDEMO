@@ -420,7 +420,7 @@ function LandingHeader() {
             <span className="font-serif text-2xl font-semibold tracking-wide text-espresso lg:text-3xl">Pooja Jewellers</span>
           ) : (
             <img
-              src="https://plain-apac-prod-public.komododecks.com/202605/14/tFeA5iA04YT6LpCKL6em/image.png"
+              src="/images/logo.png"
               alt="Pooja Jewellers"
               className="h-16 w-auto object-contain lg:h-20"
               onError={() => setLogoError(true)}
@@ -471,7 +471,7 @@ function CollectionHeader() {
             <span className="font-serif text-2xl font-semibold tracking-wide text-espresso lg:text-3xl">Pooja Jewellers</span>
           ) : (
             <img
-              src="https://plain-apac-prod-public.komododecks.com/202605/14/tFeA5iA04YT6LpCKL6em/image.png"
+              src="/images/logo.png"
               alt="Pooja Jewellers"
               className="h-16 w-auto object-contain lg:h-20"
               onError={() => setLogoError(true)}
@@ -750,69 +750,81 @@ function Footer() {
               />
             </div>
           </div>
-          <div className="flex flex-col items-start md:items-center">
+          <div className="flex flex-col items-start">
             <h3 className="mb-7 font-serif text-xl font-semibold text-white">Contact Us</h3>
-            <div className="space-y-4 w-full">
+            <div className="grid w-full grid-cols-1 gap-4">
+
+              {/* Phone */}
+              <a href="tel:+919960184674"
+                className="flex min-w-0 items-center gap-3.5 group">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 text-white/50 transition-all duration-300 group-hover:border-camel group-hover:text-camel">
+                  <Phone className="h-4 w-4" strokeWidth={1.5} />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-sans text-sm font-semibold text-white/80 transition-colors group-hover:text-camel">Phone</p>
+                  <p className="break-words font-sans text-xs text-white/40">9960184674</p>
+                </div>
+              </a>
+
+              {/* Email */}
+              <a href="mailto:poojajewellers.ngp@gmail.com"
+                className="flex min-w-0 items-center gap-3.5 group">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 text-white/50 transition-all duration-300 group-hover:border-camel group-hover:text-camel">
+                  <Mail className="h-4 w-4" strokeWidth={1.5} />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-sans text-sm font-semibold text-white/80 transition-colors group-hover:text-camel">Email</p>
+                  <p className="break-words font-sans text-xs text-white/40">poojajewellers.ngp@gmail.com</p>
+                </div>
+              </a>
 
               {/* WhatsApp */}
               <a href="https://wa.me/9960184674" target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-3.5 group">
+                className="flex min-w-0 items-center gap-3.5 group">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 text-white/50 transition-all duration-300 group-hover:border-camel group-hover:text-camel">
                   <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                   </svg>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-sans text-sm font-semibold text-white/80 transition-colors group-hover:text-camel">Whatsapp</p>
-                  <p className="font-sans text-xs text-white/40">wa.me/9960184674</p>
+                  <p className="break-words font-sans text-xs text-white/40">wa.me/9960184674</p>
                 </div>
               </a>
 
               {/* Google Map */}
               <a href="https://www.google.com/maps/place/Pooja+Jewellers+Nagpur+Gittikhadan+-+Gold+Silver/@21.1735752,79.0546844,939m/data=!3m2!1e3!4b1!4m6!3m5!1s0x3bd4c1f759590ab9:0xccde4249510b93de!8m2!3d21.1735752!4d79.0572593!16s%2Fg%2F11xh5qbq29?entry=ttu&g_ep=EgoyMDI2MDUxMy4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-3.5 group">
+                className="flex min-w-0 items-center gap-3.5 group">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 text-white/50 transition-all duration-300 group-hover:border-camel group-hover:text-camel">
                   <MapPin className="h-4 w-4" strokeWidth={1.5} />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-sans text-sm font-semibold text-white/80 transition-colors group-hover:text-camel">Google Map Pooja Jewellers Nagpur</p>
-                  <p className="font-sans text-xs text-white/40">maps.google.com → Pooja Jewellers Nagpur</p>
+                  <p className="break-words font-sans text-xs text-white/40">maps.google.com - Pooja Jewellers Nagpur</p>
                 </div>
               </a>
 
               {/* Review */}
               <a href="https://g.page/r/Cd6TC1FJQt7MEBM/review" target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-3.5 group">
+                className="flex min-w-0 items-center gap-3.5 group">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 text-white/50 transition-all duration-300 group-hover:border-camel group-hover:text-camel">
                   <Star className="h-4 w-4" strokeWidth={1.5} />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-sans text-sm font-semibold text-white/80 transition-colors group-hover:text-camel">Review Pooja Jewellers Nagpur</p>
-                  <p className="font-sans text-xs text-white/40">g.page/r/Cd6TC1FJQt7MEBM/review</p>
+                  <p className="break-words font-sans text-xs text-white/40">g.page/r/Cd6TC1FJQt7MEBM/review</p>
                 </div>
               </a>
 
               {/* Catalogue */}
               <a href="https://www.whatsapp.com/catalog/919960184674/?app_absent=0&utm_source=ig" target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-3.5 group">
+                className="flex min-w-0 items-center gap-3.5 group">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 text-white/50 transition-all duration-300 group-hover:border-camel group-hover:text-camel">
                   <Gem className="h-4 w-4" strokeWidth={1.5} />
                 </div>
-                <div>
-                  <p className="font-sans text-sm font-semibold text-white/80 transition-colors group-hover:text-camel">Jeweller Catalogue – Pooja Jewellers Nagpur</p>
-                  <p className="font-sans text-xs text-white/40">wa.me/c/919960184674</p>
-                </div>
-              </a>
-
-              {/* Facebook */}
-              <a href="https://www.facebook.com/poojajewellers123/?ref=PROFILE_EDIT_xav_ig_profile_page_web" target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-3.5 group">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 text-white/50 transition-all duration-300 group-hover:border-camel group-hover:text-camel">
-                  <FacebookIcon className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="font-sans text-sm font-semibold text-white/80 transition-colors group-hover:text-camel">Pooja Jewellers</p>
-                  <p className="font-sans text-xs text-white/40">Facebook Page</p>
+                <div className="min-w-0">
+                  <p className="font-sans text-sm font-semibold text-white/80 transition-colors group-hover:text-camel">Jeweller Catalogue - Pooja Jewellers Nagpur</p>
+                  <p className="break-words font-sans text-xs text-white/40">wa.me/c/919960184674</p>
                 </div>
               </a>
 
@@ -824,14 +836,11 @@ function Footer() {
               <a href="https://instagram.com/pooja_jewellers_nagpur" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 text-white/50 transition-all duration-300 hover:border-camel hover:text-camel">
                 <InstagramIcon className="h-4 w-4" />
               </a>
-              <a href="https://facebook.com/poojajewellers" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 text-white/50 transition-all duration-300 hover:border-camel hover:text-camel">
-                <FacebookIcon className="h-4 w-4" />
-              </a>
             </div>
             <h4 className="mb-4 font-sans text-[10px] font-semibold uppercase tracking-[.2em] text-white/30">Store Hours</h4>
             <div className="space-y-1.5 text-right">
-              <p className="font-sans text-sm text-white/50">Mon – Sat: 10:00 AM – 8:30 PM</p>
-              <p className="font-sans text-sm text-white/50">Sunday: 11:00 AM – 6:00 PM</p>
+              <p className="font-sans text-sm text-white/50">Mon - Sat: 10:00 AM - 8:30 PM</p>
+              <p className="font-sans text-sm text-white/50">Sunday: 11:00 AM - 6:00 PM</p>
             </div>
           </div>
         </div>
