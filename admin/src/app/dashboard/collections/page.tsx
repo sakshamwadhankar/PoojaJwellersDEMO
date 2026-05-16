@@ -31,6 +31,8 @@ export default function CollectionsPage() {
   const [editCategory, setEditCategory] = useState("Diamond");
   const [editMaterial, setEditMaterial] = useState("Gold");
   const [editIsTop6, setEditIsTop6] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<JewelleryItem | null>(null);
 
   function startEdit(item: JewelleryItem) {
     setEditingId(item.id);
@@ -103,17 +105,58 @@ export default function CollectionsPage() {
     finally { setUploading(false); }
   }
 
+  function requestDelete(item: JewelleryItem) {
+    setItemToDelete(item);
+  }
+
   async function handleDelete(item: JewelleryItem) {
-    if (!confirm(`Delete "${item.caption}"?`)) return;
+    setDeleting(true);
+    setError("");
+    setSuccess("");
     try {
       try { await deleteObject(ref(storage, item.image_url)); } catch { /* ignore */ }
       await deleteDoc(doc(db, "collections", item.id));
       setItems((p) => p.filter((i) => i.id !== item.id));
-    } catch { alert("Failed to delete."); }
+      setItemToDelete(null);
+      setSuccess("Item deleted successfully!");
+    } catch {
+      setError("Failed to delete item.");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
     <div className="py-6 max-w-6xl">
+      {itemToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900">Delete item?</h3>
+            <p className="mt-2 text-sm text-gray-500">
+              This will permanently remove "{itemToDelete.caption}" from the collection.
+            </p>
+            <div className="mt-5 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+                onClick={() => setItemToDelete(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white transition-opacity disabled:opacity-50"
+                onClick={() => handleDelete(itemToDelete)}
+                disabled={deleting}
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Collections</h1>
         <p className="text-gray-500 mt-1 text-sm">Upload jewellery photos and manage the homepage showcase.</p>
@@ -247,7 +290,7 @@ export default function CollectionsPage() {
                           </div>
                         </div>
                       )}
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex-shrink-0">
                         {editingId === item.id ? (
                           <>
                             <button onClick={handleSaveEdit} className="p-2 text-green-600 hover:bg-green-50 rounded-lg" title="Save">✓</button>
@@ -255,12 +298,12 @@ export default function CollectionsPage() {
                           </>
                         ) : (
                           <>
-                            <button onClick={() => startEdit(item)} className="p-2 rounded-lg text-gray-400 hover:text-black hover:bg-gray-100 transition-all">
+                            <button type="button" onClick={() => startEdit(item)} className="p-2 rounded-lg text-gray-400 hover:text-black hover:bg-gray-100 transition-all">
                               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                               </svg>
                             </button>
-                            <button onClick={() => handleDelete(item)} className="p-2 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-all">
+                            <button type="button" onClick={() => requestDelete(item)} className="p-2 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-all">
                               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
