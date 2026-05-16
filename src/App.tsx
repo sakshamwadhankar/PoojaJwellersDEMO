@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { collection, getDocs, query, orderBy, where } from "firebase/firestore";
+import { db } from "./lib/firebase";
 import {
   ChevronLeft,
   ChevronRight,
@@ -251,11 +253,14 @@ const CATEGORIES: Category[] = [
   "Bracelets",
 ];
 
+/* ── Firestore data types ── */
+
 interface Product {
-  id: number;
-  name: string;
-  material: "Gold" | "Silver";
+  id: string;
+  name: string;          // maps to Firestore `caption`
+  material: "Gold" | "Silver";  // maps to Firestore `category`
   category: Category;
+<<<<<<< Updated upstream
   price: string;
   images: string[];  // first image is used as the card thumbnail
 }
@@ -284,13 +289,20 @@ const ALL_PRODUCTS: Product[] = [
 /* Featured products for homepage (first 6) */
 const FEATURED = ALL_PRODUCTS.slice(0, 6);
 
+=======
+  image: string;         // maps to Firestore `image_url`
+  is_top_6?: boolean;
+}
+
+>>>>>>> Stashed changes
 interface Review {
-  id: number;
-  name: string;
-  text: string;
+  id: string;
+  name: string;          // maps to Firestore `customer_name`
+  text: string;          // maps to Firestore `review_text`
   rating: number;
 }
 
+<<<<<<< Updated upstream
 const REVIEWS: Review[] = [
   { id: 1, name: "Mamta Farnandis", text: "Best place to buy gold genuine and trusted good design and low rate and owner is good person humble and polite.", rating: 5 },
   { id: 2, name: "Mily Chauhan", text: "Great experience wonderful and friendly staff with latest designs definitely visit Pooja jewellers.", rating: 5 },
@@ -307,6 +319,94 @@ const REEL_VIDEOS = [
   { src: "/videos/Video-452.mp4", link: "https://www.instagram.com/reel/DYZUinVgK1N/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" },
   { src: "/videos/Video-738.mp4", link: "https://www.instagram.com/reel/DP57TENiK1j/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" },
 ];
+=======
+interface Reel {
+  id: string;
+  video_url: string;
+  instagram_link: string;
+  display_order: number;
+}
+
+/* ── Live Firestore data hook ── */
+
+interface LiveData {
+  featured: Product[];
+  allProducts: Product[];
+  reviews: Review[];
+  reels: Reel[];
+  loading: boolean;
+}
+
+function useLiveData(): LiveData {
+  const [featured, setFeatured] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reels, setReels] = useState<Reel[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchAll() {
+      try {
+        // 1. Fetch all collections items
+        const colSnap = await getDocs(
+          query(collection(db, "collections"), orderBy("created_at", "desc"))
+        ).catch(() => getDocs(collection(db, "collections")));
+
+        const allItems: Product[] = colSnap.docs.map((d) => {
+          const data = d.data();
+          return {
+            id: d.id,
+            name: data.caption ?? "Untitled",
+            material: (data.category === "Silver" ? "Silver" : "Gold") as "Gold" | "Silver",
+            category: (data.category ?? "Gold") as Category,
+            image: data.image_url ?? "",
+            is_top_6: data.is_top_6 ?? false,
+          };
+        });
+
+        setAllProducts(allItems);
+        setFeatured(allItems.filter((p) => p.is_top_6).slice(0, 6));
+
+        // 2. Fetch visible reviews
+        const revSnap = await getDocs(
+          query(collection(db, "reviews"), where("is_visible", "==", true))
+        ).catch(() => getDocs(collection(db, "reviews")));
+
+        setReviews(
+          revSnap.docs.map((d) => {
+            const data = d.data();
+            return {
+              id: d.id,
+              name: data.customer_name ?? "Anonymous",
+              text: data.review_text ?? "",
+              rating: data.rating ?? 5,
+            };
+          })
+        );
+
+        // 3. Fetch reels sorted by display_order
+        const reelSnap = await getDocs(
+          query(collection(db, "reels"), orderBy("display_order"))
+        ).catch(() => getDocs(collection(db, "reels")));
+
+        setReels(
+          reelSnap.docs.map((d) => ({
+            id: d.id,
+            ...d.data(),
+          } as Reel))
+        );
+      } catch (err) {
+        console.warn("Firestore fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchAll();
+  }, []);
+
+  return { featured, allProducts, reviews, reels, loading };
+}
+>>>>>>> Stashed changes
 
 /* ───────────────── landing header ───────────────── */
 
@@ -520,7 +620,7 @@ function ProductCard({ product }: { product: Product }) {
 
 /* ───────────────── homepage featured collection ───────────────── */
 
-function FeaturedCollection() {
+function FeaturedCollection({ products, loading }: { products: Product[]; loading: boolean }) {
   const { navigate } = useRouter();
 
   return (
@@ -533,18 +633,16 @@ function FeaturedCollection() {
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 md:gap-8">
-          {FEATURED.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
+          {loading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="aspect-square animate-pulse rounded-2xl bg-linen" />
+              ))
+            : products.map((p) => <ProductCard key={p.id} product={p} />)}
         </div>
 
-        {/* Explore Full Collection — navigates to collection page */}
         <div className="mt-16 text-center">
           <button
-            onClick={() => {
-              navigate("collection");
-              window.scrollTo({ top: 0 });
-            }}
+            onClick={() => { navigate("collection"); window.scrollTo({ top: 0 }); }}
             className="group inline-flex items-center gap-3 rounded-2xl border border-camel/30 bg-transparent px-9 py-4 font-sans text-[11px] font-semibold uppercase tracking-[.18em] text-espresso transition-all duration-500 hover:border-camel hover:bg-camel hover:text-white"
           >
             <Sparkles className="h-4 w-4" strokeWidth={1.5} />
@@ -559,7 +657,7 @@ function FeaturedCollection() {
 
 /* ───────────────── reviews ───────────────── */
 
-function Reviews() {
+function Reviews({ reviews }: { reviews: Review[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -607,7 +705,7 @@ function Reviews() {
             </button>
           )}
           <div ref={scrollRef} className="hide-scrollbar flex gap-4 overflow-x-auto scroll-smooth px-1 pb-4 sm:gap-6">
-            {REVIEWS.map((r) => (
+            {reviews.map((r) => (
               <div key={r.id} className="w-[85vw] max-w-[400px] flex-shrink-0 rounded-2xl border border-khaki/30 bg-white p-6 sm:w-[350px] sm:p-8">
                 <div className="mb-4 flex gap-1">
                   {Array.from({ length: r.rating }).map((_, i) => (
@@ -632,7 +730,7 @@ function Reviews() {
 
 /* ───────────────── reels ───────────────── */
 
-function ReelsSection() {
+function ReelsSection({ reels }: { reels: Reel[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (dir: "left" | "right") => {
@@ -661,11 +759,23 @@ function ReelsSection() {
           </button>
           <div ref={scrollRef} className="hide-scrollbar flex gap-4 overflow-x-auto scroll-smooth px-1 pb-2 sm:gap-5">
             <div className="hidden shrink-0 lg:block lg:w-[calc((100%-6*210px-5*20px)/2)]" />
+<<<<<<< Updated upstream
             {REEL_VIDEOS.map((reel, i) => (
               <div key={i} className="w-[180px] shrink-0 sm:w-[200px] md:w-[210px]">
                 <a href={reel.link} target="_blank" rel="noopener noreferrer" className="group relative block aspect-[9/16] overflow-hidden rounded-2xl bg-espresso">
                   <video src={reel.src} autoPlay loop muted playsInline className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-espresso/20 transition-all duration-500 group-hover:bg-espresso/35 opacity-0 group-hover:opacity-100">
+=======
+            {reels.map((reel, i) => (
+              <div key={reel.id} className="w-[180px] shrink-0 sm:w-[200px] md:w-[210px]">
+                <a href={reel.instagram_link || "https://www.instagram.com/pooja_jewellers_nagpur"} target="_blank" rel="noopener noreferrer" className="group relative block aspect-[9/16] overflow-hidden rounded-2xl bg-espresso">
+                  {reel.video_url ? (
+                    <video src={reel.video_url} className="h-full w-full object-cover" muted loop playsInline />
+                  ) : (
+                    <div className="h-full w-full bg-espresso/60" />
+                  )}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-espresso/20 transition-all duration-500 group-hover:bg-espresso/35">
+>>>>>>> Stashed changes
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/30 bg-white/15 backdrop-blur-sm transition-all duration-300 group-hover:scale-110 group-hover:border-white/50 group-hover:bg-white/25">
                       <Play className="h-6 w-6 ml-0.5 text-white" fill="white" />
                     </div>
@@ -803,15 +913,15 @@ function Footer() {
 
 /* ───────────────── full collection page ───────────────── */
 
-function CollectionPage() {
+function CollectionPage({ allProducts }: { allProducts: Product[] }) {
   const [activeCategory, setActiveCategory] = useState<Category>("All");
   const categoriesRef = useRef<HTMLDivElement>(null);
 
   const filtered = activeCategory === "All"
-    ? ALL_PRODUCTS
+    ? allProducts
     : activeCategory === "Gold" || activeCategory === "Silver"
-      ? ALL_PRODUCTS.filter((p) => p.material === activeCategory)
-      : ALL_PRODUCTS.filter((p) => p.category === activeCategory);
+      ? allProducts.filter((p) => p.material === activeCategory)
+      : allProducts.filter((p) => p.category === activeCategory);
 
   /* Scroll category into view when selected */
   useEffect(() => {
@@ -909,14 +1019,14 @@ function CollectionPage() {
 
 /* ───────────────── landing page ───────────────── */
 
-function LandingPage() {
+function LandingPage({ featured, reviews, reels, loading }: { featured: Product[]; reviews: Review[]; reels: Reel[]; loading: boolean }) {
   return (
     <>
       <LandingHeader />
       <Hero />
-      <FeaturedCollection />
-      <Reviews />
-      <ReelsSection />
+      <FeaturedCollection products={featured} loading={loading} />
+      <Reviews reviews={reviews} />
+      <ReelsSection reels={reels} />
       <Footer />
     </>
   );
@@ -1007,6 +1117,7 @@ function WhatsAppFAB() {
 export default function App() {
   const [page, setPage] = useState<Page>("home");
   const [lightboxProduct, setLightboxProduct] = useState<Product | null>(null);
+  const { featured, allProducts, reviews, reels, loading } = useLiveData();
 
   const navigate = useCallback((p: Page) => {
     setPage(p);
@@ -1024,8 +1135,8 @@ export default function App() {
     <RouterContext.Provider value={{ page, navigate }}>
       <LightboxContext.Provider value={{ open: openLightbox }}>
         <div className="min-h-screen bg-white font-sans">
-          {page === "home" && <LandingPage />}
-          {page === "collection" && <CollectionPage />}
+          {page === "home" && <LandingPage featured={featured} reviews={reviews} reels={reels} loading={loading} />}
+          {page === "collection" && <CollectionPage allProducts={allProducts} />}
         </div>
         <WhatsAppFAB />
         <LightboxModal product={lightboxProduct} onClose={closeLightbox} />
