@@ -420,7 +420,7 @@ function LandingHeader() {
             <span className="font-serif text-2xl font-semibold tracking-wide text-espresso lg:text-3xl">Pooja Jewellers</span>
           ) : (
             <img
-              src="https://plain-apac-prod-public.komododecks.com/202605/14/tFeA5iA04YT6LpCKL6em/image.png"
+              src="/images/logo.png"
               alt="Pooja Jewellers"
               className="h-16 w-auto object-contain lg:h-20"
               onError={() => setLogoError(true)}
@@ -471,7 +471,7 @@ function CollectionHeader() {
             <span className="font-serif text-2xl font-semibold tracking-wide text-espresso lg:text-3xl">Pooja Jewellers</span>
           ) : (
             <img
-              src="https://plain-apac-prod-public.komododecks.com/202605/14/tFeA5iA04YT6LpCKL6em/image.png"
+              src="/images/logo.png"
               alt="Pooja Jewellers"
               className="h-16 w-auto object-contain lg:h-20"
               onError={() => setLogoError(true)}
