@@ -118,9 +118,7 @@ export default function DashboardPage() {
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Firebase Usage</h3>
-            <p className="mt-1 text-xs text-gray-500">
-              Storage used by catalog images and reel videos.
-            </p>
+            <p className="mt-1 text-xs text-gray-500">Storage used by catalog images and reel videos.</p>
           </div>
           <div className="rounded-2xl border border-gray-200 bg-gray-50 px-3 py-2 text-right">
             <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-gray-400">Total</p>
