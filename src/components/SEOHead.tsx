@@ -45,7 +45,7 @@ export function SEOHead({
           postalCode: "440001",
           addressCountry: "IN",
         },
-        telephone: "+91-XXXXXXXXXX",
+        telephone: "+91-9960184674",
         url: "https://pooja-jewellers-nagpur.web.app",
         priceRange: "₹₹₹",
         geo: {

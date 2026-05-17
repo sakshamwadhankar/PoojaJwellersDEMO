@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, ChangeEvent } from "react";
+import Image from "next/image";
 import {
   collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy, updateDoc
 } from "firebase/firestore";
@@ -26,6 +27,59 @@ function getCreatedAtValue(item: JewelleryItem) {
   }
 
   return 0;
+}
+
+async function compressImage(file: File): Promise<File> {
+  if (typeof window === "undefined" || !file.type.startsWith("image/")) {
+    return file;
+  }
+
+  const imageUrl = URL.createObjectURL(file);
+
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new window.Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Unable to load image for compression."));
+      img.src = imageUrl;
+    });
+
+    const maxDimension = 1600;
+    const largestSide = Math.max(image.width, image.height);
+    const scale = largestSide > maxDimension ? maxDimension / largestSide : 1;
+    const targetWidth = Math.max(1, Math.round(image.width * scale));
+    const targetHeight = Math.max(1, Math.round(image.height * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+
+    const context = canvas.getContext("2d");
+    if (!context) {
+      return file;
+    }
+
+    context.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+    const outputType = file.type === "image/png" ? "image/png" : "image/webp";
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, outputType, 0.82);
+    });
+
+    if (!blob || blob.size >= file.size) {
+      return file;
+    }
+
+    const fileExtension = outputType === "image/png" ? "png" : "webp";
+    const baseName = file.name.replace(/\.[^.]+$/, "");
+
+    return new File([blob], `${baseName}.${fileExtension}`, {
+      type: outputType,
+      lastModified: Date.now(),
+    });
+  } finally {
+    URL.revokeObjectURL(imageUrl);
+  }
 }
 
 export default function CollectionsPage() {
@@ -172,8 +226,11 @@ export default function CollectionsPage() {
     }
     setError(""); setSuccess(""); setUploading(true);
     try {
-      const storageRef = ref(storage, `collections/${Date.now()}_${file.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      const optimizedFile = await compressImage(file);
+      const storageRef = ref(storage, `collections/${Date.now()}_${optimizedFile.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, optimizedFile, {
+        contentType: optimizedFile.type,
+      });
       const downloadURL = await new Promise<string>((resolve, reject) => {
         uploadTask.on("state_changed",
           (s) => setProgress(Math.round((s.bytesTransferred / s.totalBytes) * 100)),
@@ -302,14 +359,16 @@ export default function CollectionsPage() {
               <div onClick={() => fileRef.current?.click()}
                 className="relative border-2 border-dashed border-gray-300 rounded-xl overflow-hidden cursor-pointer hover:border-black transition-colors group bg-gray-50">
                 {preview
-                  ? <img src={preview} alt="Preview" className="w-full h-40 object-cover" />
+                  ? <div className="relative h-40 w-full">
+                      <Image src={preview} alt="Preview" fill unoptimized className="object-cover" />
+                    </div>
                   : <div className="flex flex-col items-center justify-center h-40 text-gray-400 group-hover:text-black transition-colors">
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       <span className="text-sm">Click to upload image</span>
                       <span className="text-xs mt-1 text-gray-500">JPG, PNG, WEBP</span>
-                    </div>}
+                </div>}
               </div>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
             </div>
@@ -487,9 +546,15 @@ export default function CollectionsPage() {
               : <div className="space-y-3 max-h-[640px] overflow-y-auto pr-1">
                   {visibleItems.map((item) => (
                     <div key={item.id} className="flex items-center gap-4 bg-white border border-gray-200 rounded-xl p-3 hover:border-gray-300 transition-colors shadow-sm group">
-                      <img src={item.image_url} alt={item.caption}
-                        className="w-14 h-14 rounded-lg object-cover flex-shrink-0 bg-gray-50"
-                        onError={(e) => { (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' fill='%23e5e7eb'%3E%3Crect width='56' height='56'/%3E%3C/svg%3E"; }} />
+                      <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-gray-50">
+                        <Image
+                          src={item.image_url}
+                          alt={item.caption}
+                          fill
+                          sizes="56px"
+                          className="object-cover"
+                        />
+                      </div>
                       {editingId === item.id ? (
                         <div className="flex-1 min-w-0 space-y-2">
                           <input type="text" value={editCaption} onChange={(e) => setEditCaption(e.target.value)} className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-black text-gray-900 bg-white" />

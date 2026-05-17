@@ -336,8 +336,8 @@ function useLiveData(): LiveData {
             ...d.data(),
           } as Reel))
         );
-      } catch (err) {
-        console.warn("Firestore fetch error:", err);
+      } catch {
+        /* Keep the storefront usable if Firestore reads fail. */
       } finally {
         setLoading(false);
       }

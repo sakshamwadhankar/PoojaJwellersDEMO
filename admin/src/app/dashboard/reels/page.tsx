@@ -191,8 +191,7 @@ export default function ReelsPage() {
           return updateDoc(doc(db, "reels", reel.id), { display_order: index + 1 });
         })
       );
-    } catch (e) {
-      console.error("Error updating order", e);
+    } catch {
       mutate(); // Revert on failure
     }
   }

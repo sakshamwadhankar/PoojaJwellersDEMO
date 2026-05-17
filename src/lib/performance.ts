@@ -20,44 +20,26 @@ export function initializePerformanceMonitoring(): void {
 
   // Monitor LCP (Largest Contentful Paint)
   try {
-    const lcpObserver = new PerformanceObserver((list) => {
-      const entries = list.getEntries();
-      const lastEntry = entries[entries.length - 1];
-      console.log("LCP:", lastEntry.renderTime || lastEntry.loadTime);
-    });
+    const lcpObserver = new PerformanceObserver(() => {});
     lcpObserver.observe({ entryTypes: ["largest-contentful-paint"] });
-  } catch (e) {
-    console.warn("LCP monitoring not supported");
+  } catch {
+    /* PerformanceObserver entry type is not supported in this browser. */
   }
 
   // Monitor FID (First Input Delay)
   try {
-    const fidObserver = new PerformanceObserver((list) => {
-      const entries = list.getEntries();
-      entries.forEach((entry) => {
-        console.log("FID:", entry.processingDuration);
-      });
-    });
+    const fidObserver = new PerformanceObserver(() => {});
     fidObserver.observe({ entryTypes: ["first-input"] });
-  } catch (e) {
-    console.warn("FID monitoring not supported");
+  } catch {
+    /* PerformanceObserver entry type is not supported in this browser. */
   }
 
   // Monitor CLS (Cumulative Layout Shift)
   try {
-    const clsObserver = new PerformanceObserver((list) => {
-      const entries = list.getEntries();
-      let cls = 0;
-      entries.forEach((entry) => {
-        if (!(entry as PerformanceEntry & { hadRecentInput?: boolean }).hadRecentInput) {
-          cls += (entry as PerformanceEntry & { value?: number }).value || 0;
-        }
-      });
-      console.log("CLS:", cls);
-    });
+    const clsObserver = new PerformanceObserver(() => {});
     clsObserver.observe({ entryTypes: ["layout-shift"] });
-  } catch (e) {
-    console.warn("CLS monitoring not supported");
+  } catch {
+    /* PerformanceObserver entry type is not supported in this browser. */
   }
 }
 
@@ -213,13 +195,8 @@ export function implementLazyLoading(): void {
 export function monitorPerformanceMetrics(): void {
   if (typeof window === "undefined") return;
 
-  // Log performance metrics
   window.addEventListener("load", () => {
     const pageLoadTime = measurePageLoadTime();
-    const resourceTiming = getResourceTiming();
-
-    console.log("Page Load Time:", pageLoadTime, "ms");
-    console.log("Resource Timing:", resourceTiming);
 
     // Send to analytics if available
     if (window.gtag) {

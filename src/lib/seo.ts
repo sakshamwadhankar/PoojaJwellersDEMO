@@ -138,7 +138,7 @@ export function generateOrganizationSchema(): Record<string, unknown> {
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "Customer Service",
-      telephone: "+91-XXXXXXXXXX",
+      telephone: "+91-9960184674",
     },
     sameAs: [
       "https://www.instagram.com/pooja_jewellers_nagpur",
