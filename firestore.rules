@@ -22,5 +22,10 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+    
+    match /subcategories/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }

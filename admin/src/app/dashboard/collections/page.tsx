@@ -110,6 +110,13 @@ export default function CollectionsPage() {
   const [materialFilter, setMaterialFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const [firestoreSubcategories, setFirestoreSubcategories] = useState<string[]>([]);
+  const [subcategoryDocs, setSubcategoryDocs] = useState<{ id: string; name: string; isDefault?: boolean }[]>([]);
+  const [managingCategories, setManagingCategories] = useState(false);
+  const [addingSubcat, setAddingSubcat] = useState(false);
+  const [deletingSubcatId, setDeletingSubcatId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
+
 
   const top6Count = items.filter((item) => item.is_top_6).length;
 
@@ -125,16 +132,153 @@ export default function CollectionsPage() {
     setTop6PopupOpen(true);
   }
 
+  const deletedDefaults = subcategoryDocs
+    .filter(doc => doc.isDefault && (doc as any).deleted)
+    .map(doc => doc.name.toLowerCase());
+
+  const activeDefaults = DEFAULT_SUBCATEGORY_OPTIONS.filter(
+    cat => !deletedDefaults.includes(cat.toLowerCase())
+  );
+
   const categoryOptions = Array.from(
     new Set(
       [
-        ...DEFAULT_SUBCATEGORY_OPTIONS,
+        ...activeDefaults,
+        ...firestoreSubcategories.filter(name => {
+          const doc = subcategoryDocs.find(d => d.name === name);
+          return !doc || (!(doc as any).deleted && !doc.isDefault);
+        }),
         ...items.map((item) => item.category).filter(Boolean),
         category,
         editCategory,
       ].map((value) => value.trim()),
     ),
   ).filter(Boolean);
+
+  async function fetchFirestoreSubcategories() {
+    try {
+      const snap = await getDocs(collection(db, "subcategories"));
+      const docs = snap.docs.map((d) => ({ 
+        id: d.id, 
+        name: (d.data() as { name: string }).name,
+        isDefault: (d.data() as { isDefault?: boolean }).isDefault || false
+      }));
+      setSubcategoryDocs(docs);
+      setFirestoreSubcategories(docs.map((d) => d.name));
+    } catch { /* ignore */ }
+  }
+
+  async function handleAddSubcategory(value: string) {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    
+    // Check against all categories including hidden defaults
+    const allCategoryNames = [
+      ...DEFAULT_SUBCATEGORY_OPTIONS,
+      ...subcategoryDocs.map(d => d.name)
+    ];
+    
+    const duplicate = allCategoryNames.some(
+      (c) => c.toLowerCase() === trimmed.toLowerCase()
+    );
+    
+    if (duplicate) {
+      setError("This subcategory already exists.");
+      setTimeout(() => setError(""), 3000);
+      return;
+    }
+    
+    setAddingSubcat(true);
+    try {
+      await addDoc(collection(db, "subcategories"), { 
+        name: trimmed, 
+        isDefault: false,
+        created_at: serverTimestamp() 
+      });
+      await fetchFirestoreSubcategories();
+      setNewCategoryInput("");
+      setCategory(trimmed);
+      setSuccess("Category added!");
+      setTimeout(() => setSuccess(""), 2000);
+    } catch { 
+      setError("Failed to add category.");
+      setTimeout(() => setError(""), 3000);
+    }
+    finally { setAddingSubcat(false); }
+  }
+
+  async function handleRestoreDefault(name: string) {
+    try {
+      // Check if there's already a custom category with this name
+      const customWithSameName = subcategoryDocs.find(
+        d => !d.isDefault && d.name.toLowerCase() === name.toLowerCase()
+      );
+      
+      if (customWithSameName) {
+        // Delete the custom one first, then restore the default
+        await deleteDoc(doc(db, "subcategories", customWithSameName.id));
+      }
+      
+      // Find and delete the "deleted" marker doc
+      const snap = await getDocs(collection(db, "subcategories"));
+      const deletedDoc = snap.docs.find(d => {
+        const data = d.data() as { name: string; isDefault?: boolean; deleted?: boolean };
+        return data.name === name && data.isDefault && data.deleted;
+      });
+      
+      if (deletedDoc) {
+        await deleteDoc(doc(db, "subcategories", deletedDoc.id));
+        await fetchFirestoreSubcategories();
+        setSuccess("Category restored!");
+        setTimeout(() => setSuccess(""), 2000);
+      }
+    } catch {
+      setError("Failed to restore category.");
+      setTimeout(() => setError(""), 3000);
+    }
+  }
+
+  async function handleDeleteSubcategory(id: string, name: string, isDefault: boolean) {
+    if (isDefault) {
+      // Mark default as deleted (hide it, don't remove)
+      setDeletingSubcatId(id);
+      try {
+        await addDoc(collection(db, "subcategories"), {
+          name,
+          isDefault: true,
+          deleted: true,
+          created_at: serverTimestamp()
+        });
+        // Immediately update local state to hide it
+        await fetchFirestoreSubcategories();
+        setConfirmDelete(null);
+        setSuccess("Category hidden!");
+        setTimeout(() => setSuccess(""), 2000);
+      } catch {
+        setError("Failed to hide category.");
+        setTimeout(() => setError(""), 3000);
+      } finally {
+        setDeletingSubcatId(null);
+      }
+      return;
+    }
+    
+    // Actually delete custom categories
+    setDeletingSubcatId(id);
+    try {
+      await deleteDoc(doc(db, "subcategories", id));
+      // Immediately update local state
+      await fetchFirestoreSubcategories();
+      setConfirmDelete(null);
+      setSuccess("Category removed!");
+      setTimeout(() => setSuccess(""), 2000);
+    } catch { 
+      setError("Failed to remove category.");
+      setTimeout(() => setError(""), 3000);
+    }
+    finally { setDeletingSubcatId(null); }
+  }
+
 
   function addCustomCategory(value: string, mode: "new" | "edit") {
     const nextCategory = value.trim();
@@ -191,7 +335,7 @@ export default function CollectionsPage() {
     } finally { setLoading(false); }
   }
 
-  useEffect(() => { fetchItems(); }, []);
+  useEffect(() => { fetchItems(); fetchFirestoreSubcategories(); }, []);
 
   function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]; if (!f) return;
@@ -296,6 +440,50 @@ export default function CollectionsPage() {
 
   return (
     <div className="max-w-6xl py-6 pb-28 md:pb-6">
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900">
+              {confirmDelete.id.startsWith('default-') ? 'Hide category?' : 'Remove category?'}
+            </h3>
+            <p className="mt-2 text-sm text-gray-500">
+              {confirmDelete.id.startsWith('default-') ? (
+                <>
+                  Are you sure you want to hide &quot;{confirmDelete.name}&quot;? This is a default category and will be hidden from the list. You can restore it later if needed.
+                </>
+              ) : (
+                <>
+                  Are you sure you want to remove &quot;{confirmDelete.name}&quot;? This will permanently delete this custom category. Existing items won&apos;t be affected.
+                </>
+              )}
+            </p>
+            <div className="mt-5 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                onClick={() => setConfirmDelete(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition-opacity ${
+                  confirmDelete.id.startsWith('default-') 
+                    ? 'bg-orange-600 hover:bg-orange-700' 
+                    : 'bg-red-600 hover:bg-red-700'
+                }`}
+                onClick={() => {
+                  const isDefault = confirmDelete.id.startsWith('default-');
+                  handleDeleteSubcategory(confirmDelete.id, confirmDelete.name, isDefault);
+                }}
+              >
+                {confirmDelete.id.startsWith('default-') ? 'Hide' : 'Remove'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {top6PopupOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
@@ -393,35 +581,152 @@ export default function CollectionsPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Sub Category</label>
-              <div className="flex flex-wrap gap-2">
-                {categoryOptions.map((cat) => (
-                  <button key={cat} type="button" onClick={() => setCategory(cat)}
-                    className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition-all ${
-                      category === cat
-                        ? "bg-gray-100 border-gray-300 text-black"
-                        : "bg-white border-gray-200 text-gray-500 hover:text-gray-700"}`}>
-                    {cat}
-                  </button>
-                ))}
-              </div>
-              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                <input
-                  type="text"
-                  value={newCategoryInput}
-                  onChange={(e) => setNewCategoryInput(e.target.value)}
-                  placeholder="Create sub category"
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition"
-                />
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-medium text-gray-700">Sub Category</label>
                 <button
                   type="button"
-                  onClick={() => addCustomCategory(newCategoryInput, "new")}
-                  className="rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-black transition-colors hover:bg-gray-50"
+                  onClick={() => { setManagingCategories(!managingCategories); setNewCategoryInput(""); }}
+                  className="flex items-center justify-center w-7 h-7 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-black transition-all"
+                  title={managingCategories ? "Done editing" : "Edit categories"}
                 >
-                  Add Tag
+                  {managingCategories ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                      <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+                    </svg>
+                  )}
                 </button>
               </div>
+
+              {/* Select mode – pick a subcategory */}
+              {!managingCategories && (
+                <div className="flex flex-wrap gap-2">
+                  {categoryOptions.map((cat) => (
+                    <button key={cat} type="button" onClick={() => setCategory(cat)}
+                      className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition-all ${
+                        category === cat
+                          ? "bg-black text-white border-black"
+                          : "bg-white border-gray-200 text-gray-600 hover:border-gray-400 hover:text-black"}`}>
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Manage mode – add / delete subcategories */}
+              {managingCategories && (
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 space-y-3">
+                  {/* Add new */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newCategoryInput}
+                      onChange={(e) => setNewCategoryInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddSubcategory(newCategoryInput); } }}
+                      placeholder="New subcategory name…"
+                      className="flex-1 min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition"
+                    />
+                    <button
+                      type="button"
+                      disabled={addingSubcat || !newCategoryInput.trim()}
+                      onClick={() => handleAddSubcategory(newCategoryInput)}
+                      className="shrink-0 rounded-lg bg-black px-3 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-80 disabled:opacity-40"
+                    >
+                      {addingSubcat
+                        ? <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        : "Add"}
+                    </button>
+                  </div>
+
+                  {/* Active categories */}
+                  <div className="flex flex-wrap gap-2">
+                    {/* Built-in defaults (not hidden) */}
+                    {DEFAULT_SUBCATEGORY_OPTIONS
+                      .filter(defCat => {
+                        // Check if this default is marked as deleted in Firestore
+                        const isHidden = subcategoryDocs.some(doc => 
+                          doc.name.toLowerCase() === defCat.toLowerCase() && 
+                          doc.isDefault && 
+                          (doc as any).deleted
+                        );
+                        return !isHidden;
+                      })
+                      .map((cat) => (
+                      <span key={`default-${cat}`} className="inline-flex items-center gap-1 pl-3 pr-1.5 py-1.5 rounded-full text-xs font-medium bg-gray-100 border border-gray-200 text-gray-700">
+                        {cat}
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDelete({ id: `default-${cat}`, name: cat })}
+                          className="flex items-center justify-center w-4 h-4 rounded-full text-gray-400 hover:text-orange-500 hover:bg-orange-100 transition-all ml-0.5"
+                          title={`Hide "${cat}"`}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
+                            <path d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z" />
+                          </svg>
+                        </button>
+                      </span>
+                    ))}
+                    {/* Custom categories */}
+                    {subcategoryDocs
+                      .filter(doc => 
+                        !doc.isDefault && 
+                        !(doc as any).deleted
+                      )
+                      .map((doc) => (
+                      <span key={doc.id} className="inline-flex items-center gap-1 pl-3 pr-1.5 py-1.5 rounded-full text-xs font-medium bg-indigo-50 border border-indigo-200 text-indigo-700">
+                        {doc.name}
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDelete({ id: doc.id, name: doc.name })}
+                          disabled={deletingSubcatId === doc.id}
+                          className="flex items-center justify-center w-4 h-4 rounded-full text-indigo-400 hover:text-red-500 hover:bg-red-100 transition-all disabled:opacity-40 ml-0.5"
+                          title={`Remove "${doc.name}"`}
+                        >
+                          {deletingSubcatId === doc.id
+                            ? <span className="inline-block w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin" />
+                            : <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
+                                <path d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z" />
+                              </svg>
+                          }
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Hidden defaults - show restore option */}
+                  {subcategoryDocs.some(doc => doc.isDefault && (doc as any).deleted) && (
+                    <div className="pt-2 border-t border-gray-200">
+                      <p className="text-xs font-medium text-gray-500 mb-2">Hidden defaults (click to restore):</p>
+                      <div className="flex flex-wrap gap-2">
+                        {subcategoryDocs
+                          .filter(doc => doc.isDefault && (doc as any).deleted)
+                          .map((doc) => (
+                            <button
+                              key={doc.id}
+                              type="button"
+                              onClick={() => handleRestoreDefault(doc.name)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-gray-50 border border-dashed border-gray-300 text-gray-500 hover:bg-gray-100 hover:text-gray-700 hover:border-gray-400 transition-all"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
+                                <path fillRule="evenodd" d="M13.836 2.477a.75.75 0 0 1 .75.75v3.182a.75.75 0 0 1-.75.75h-3.182a.75.75 0 0 1 0-1.5h1.37l-.84-.841a4.5 4.5 0 0 0-7.08.932.75.75 0 0 1-1.3-.75 6 6 0 0 1 9.44-1.242l.842.84V3.227a.75.75 0 0 1 .75-.75zm-.911 7.5A.75.75 0 0 1 13.199 11a6 6 0 0 1-9.44 1.241l-.84-.84v1.371a.75.75 0 0 1-1.5 0V9.591a.75.75 0 0 1 .75-.75H5.35a.75.75 0 0 1 0 1.5H3.98l.841.841a4.5 4.5 0 0 0 7.08-.932.75.75 0 0 1 1.025-.273z" clipRule="evenodd" />
+                              </svg>
+                              {doc.name}
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <p className="text-[11px] text-gray-400">
+                    Grey = defaults (hide with ×), Purple = custom (delete with ×). Hidden defaults can be restored.
+                  </p>
+                </div>
+              )}
             </div>
+
             <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
               <div>
                 <p className="text-sm font-medium text-gray-900">Feature on Homepage</p>
