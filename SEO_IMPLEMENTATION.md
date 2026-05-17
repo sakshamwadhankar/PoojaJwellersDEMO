@@ -1,4 +1,4 @@
-# SEO Implementation Guide - Pooja Jewellers
+﻿# SEO Implementation Guide - Pooja Jewellers
 
 ## Overview
 
@@ -56,8 +56,8 @@ This document outlines the comprehensive SEO optimization implemented for Pooja 
 {
   "@type": "Organization",
   "name": "Pooja Jewellers",
-  "url": "https://pooja-jewellers-nagpur.web.app",
-  "logo": "https://pooja-jewellers-nagpur.web.app/logo.png",
+  "url": "https://poojajewellers.vercel.app",
+  "logo": "https://poojajewellers.vercel.app/logo.png",
   "address": { /* complete address */ },
   "contactPoint": { /* contact info */ },
   "sameAs": [ /* social profiles */ ]
@@ -114,7 +114,7 @@ Allow: /
 Disallow: /admin/
 Disallow: /api/
 Crawl-delay: 1
-Sitemap: https://pooja-jewellers-nagpur.web.app/sitemap.xml
+Sitemap: https://poojajewellers.vercel.app/sitemap.xml
 ```
 
 ### 7. **Image Optimization** ✅

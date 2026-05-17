@@ -1,4 +1,4 @@
-# SEO Implementation Checklist - Pooja Jewellers
+﻿# SEO Implementation Checklist - Pooja Jewellers
 
 ## Pre-Launch Checklist
 
@@ -31,7 +31,7 @@
 
 ### Google Search Console
 - [ ] Go to [Google Search Console](https://search.google.com/search-console)
-- [ ] Add property: `https://pooja-jewellers-nagpur.web.app`
+- [ ] Add property: `https://poojajewellers.vercel.app`
 - [ ] Verify ownership using HTML meta tag (already in index.html)
 - [ ] Wait for verification (24-48 hours)
 - [ ] Submit sitemap: `/sitemap.xml`

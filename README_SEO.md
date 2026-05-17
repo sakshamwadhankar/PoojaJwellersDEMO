@@ -1,4 +1,4 @@
-# 🚀 Pooja Jewellers - Complete SEO Optimization System
+﻿# 🚀 Pooja Jewellers - Complete SEO Optimization System
 
 ## Overview
 
@@ -204,7 +204,7 @@ VITE_GA4_MEASUREMENT_ID=G-XXXXXXXXXX
 ### Step 4: Submit Sitemap to Google Search Console
 ```bash
 # 1. Go to https://search.google.com/search-console
-# 2. Add property: https://pooja-jewellers-nagpur.web.app
+# 2. Add property: https://poojajewellers.vercel.app
 # 3. Verify ownership (HTML meta tag already in index.html)
 # 4. Submit sitemap: /sitemap.xml
 ```
@@ -224,7 +224,7 @@ export function HomePage() {
           description: "Premium jewelry store in Gittikhadan, Nagpur...",
           keywords: ["Pooja Jewellers", "jewelry store Nagpur"],
           image: "/images/hero.jpg",
-          url: "https://pooja-jewellers-nagpur.web.app"
+          url: "https://poojajewellers.vercel.app"
         }}
       />
       {/* Page content */}

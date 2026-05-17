@@ -1,4 +1,4 @@
-# SEO Optimization Summary - Pooja Jewellers
+﻿# SEO Optimization Summary - Pooja Jewellers
 
 ## What Has Been Implemented
 
@@ -121,7 +121,7 @@ There's another "Pooja Jewellers" in the area. This implementation ensures YOUR 
 ### This Week
 1. **Submit Sitemap to Google Search Console**
    - Go to [Google Search Console](https://search.google.com/search-console)
-   - Add property: `https://pooja-jewellers-nagpur.web.app`
+   - Add property: `https://poojajewellers.vercel.app`
    - Verify ownership using HTML meta tag
    - Submit sitemap: `/sitemap.xml`
 
@@ -221,7 +221,7 @@ export function MyPage() {
           description: "Page description with location and keywords",
           keywords: ["keyword1", "keyword2"],
           image: "/images/og-image.jpg",
-          url: "https://pooja-jewellers-nagpur.web.app/page"
+          url: "https://poojajewellers.vercel.app/page"
         }}
       />
       {/* Page content */}

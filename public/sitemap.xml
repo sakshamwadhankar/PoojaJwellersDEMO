@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Homepage -->
   <url>
-    <loc>https://pooja-jewellers-nagpur.web.app/</loc>
+    <loc>https://poojajewellers.vercel.app/</loc>
     <lastmod>2026-05-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
@@ -10,7 +10,7 @@
   
   <!-- Collections -->
   <url>
-    <loc>https://pooja-jewellers-nagpur.web.app/collections</loc>
+    <loc>https://poojajewellers.vercel.app/collections</loc>
     <lastmod>2026-05-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -18,49 +18,49 @@
   
   <!-- Category Pages -->
   <url>
-    <loc>https://pooja-jewellers-nagpur.web.app/collections/diamond</loc>
+    <loc>https://poojajewellers.vercel.app/collections/diamond</loc>
     <lastmod>2026-05-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   
   <url>
-    <loc>https://pooja-jewellers-nagpur.web.app/collections/necklaces</loc>
+    <loc>https://poojajewellers.vercel.app/collections/necklaces</loc>
     <lastmod>2026-05-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   
   <url>
-    <loc>https://pooja-jewellers-nagpur.web.app/collections/pendants</loc>
+    <loc>https://poojajewellers.vercel.app/collections/pendants</loc>
     <lastmod>2026-05-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   
   <url>
-    <loc>https://pooja-jewellers-nagpur.web.app/collections/earrings</loc>
+    <loc>https://poojajewellers.vercel.app/collections/earrings</loc>
     <lastmod>2026-05-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   
   <url>
-    <loc>https://pooja-jewellers-nagpur.web.app/collections/bangles</loc>
+    <loc>https://poojajewellers.vercel.app/collections/bangles</loc>
     <lastmod>2026-05-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   
   <url>
-    <loc>https://pooja-jewellers-nagpur.web.app/collections/rings</loc>
+    <loc>https://poojajewellers.vercel.app/collections/rings</loc>
     <lastmod>2026-05-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   
   <url>
-    <loc>https://pooja-jewellers-nagpur.web.app/collections/bracelets</loc>
+    <loc>https://poojajewellers.vercel.app/collections/bracelets</loc>
     <lastmod>2026-05-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -68,28 +68,28 @@
   
   <!-- Static Pages -->
   <url>
-    <loc>https://pooja-jewellers-nagpur.web.app/about</loc>
+    <loc>https://poojajewellers.vercel.app/about</loc>
     <lastmod>2026-05-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   
   <url>
-    <loc>https://pooja-jewellers-nagpur.web.app/contact</loc>
+    <loc>https://poojajewellers.vercel.app/contact</loc>
     <lastmod>2026-05-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   
   <url>
-    <loc>https://pooja-jewellers-nagpur.web.app/privacy</loc>
+    <loc>https://poojajewellers.vercel.app/privacy</loc>
     <lastmod>2026-05-17</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
-    <loc>https://pooja-jewellers-nagpur.web.app/terms</loc>
+    <loc>https://poojajewellers.vercel.app/terms</loc>
     <lastmod>2026-05-17</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>

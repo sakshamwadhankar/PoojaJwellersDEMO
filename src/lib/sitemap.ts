@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Sitemap Generator for Pooja Jewellers
  * Generates XML sitemap for search engine crawlers
  */
@@ -14,7 +14,7 @@ export interface SitemapEntry {
  * Generate sitemap XML content
  */
 export function generateSitemapXML(entries: SitemapEntry[]): string {
-  const baseUrl = "https://pooja-jewellers-nagpur.web.app";
+  const baseUrl = "https://poojajewellers.vercel.app";
 
   const urlEntries = entries
     .map((entry) => {

@@ -1,4 +1,4 @@
-# SEO Quick Start Guide - Pooja Jewellers
+﻿# SEO Quick Start Guide - Pooja Jewellers
 
 ## Quick Setup (5 minutes)
 
@@ -40,10 +40,10 @@ useEffect(() => {
 ### 4. Submit Sitemap to Google Search Console
 
 1. Go to [Google Search Console](https://search.google.com/search-console)
-2. Add property: `https://pooja-jewellers-nagpur.web.app`
+2. Add property: `https://poojajewellers.vercel.app`
 3. Verify ownership (use HTML meta tag from index.html)
 4. Go to Sitemaps section
-5. Submit: `https://pooja-jewellers-nagpur.web.app/sitemap.xml`
+5. Submit: `https://poojajewellers.vercel.app/sitemap.xml`
 
 ## Using SEO Utilities
 
@@ -61,7 +61,7 @@ export function HomePage() {
           description: "Premium Gold and Silver jewelry store in Gittikhadan, Nagpur. Discover timeless elegance, handcrafted designs, and traditional jewelry at Pooja Jewellers.",
           keywords: ["Pooja Jewellers", "jewelry store Nagpur", "gold jewelry"],
           image: "/images/hero.jpg",
-          url: "https://pooja-jewellers-nagpur.web.app",
+          url: "https://poojajewellers.vercel.app",
           type: "website"
         }}
       />
@@ -240,7 +240,7 @@ export function ProductPage({ product }) {
           description: `Buy ${product.name} at Pooja Jewellers. Premium ${product.material} jewelry in Gittikhadan, Nagpur.`,
           keywords: [product.name, product.material, "jewelry Nagpur"],
           image: product.image,
-          url: `https://pooja-jewellers-nagpur.web.app/product/${product.id}`
+          url: `https://poojajewellers.vercel.app/product/${product.id}`
         }}
       />
       <img {...generateImageAttributes({

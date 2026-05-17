@@ -1,4 +1,4 @@
-# ✅ SEO OPTIMIZATION IMPLEMENTATION COMPLETE
+﻿# ✅ SEO OPTIMIZATION IMPLEMENTATION COMPLETE
 
 ## 🎉 Your Pooja Jewellers Website is Now Fully SEO Optimized!
 
@@ -273,7 +273,7 @@ VITE_GA4_MEASUREMENT_ID=G-XXXXXXXXXX
 ### Step 4: Submit Sitemap (5 min)
 ```bash
 # 1. Go to Google Search Console
-# 2. Add property: https://pooja-jewellers-nagpur.web.app
+# 2. Add property: https://poojajewellers.vercel.app
 # 3. Verify ownership (HTML meta tag already in index.html)
 # 4. Submit sitemap: /sitemap.xml
 ```
@@ -343,7 +343,7 @@ export function MyPage() {
           description: "Page description with location",
           keywords: ["keyword1", "keyword2"],
           image: "/images/og-image.jpg",
-          url: "https://pooja-jewellers-nagpur.web.app/page"
+          url: "https://poojajewellers.vercel.app/page"
         }}
       />
       {/* Page content */}

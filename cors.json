@@ -1,9 +1,9 @@
-[
+﻿[
   {
     "origin": [
       "http://localhost:3000",
       "http://127.0.0.1:3000",
-      "https://admin-poojajewellers.vercel.app"
+      "https://poojajewellers.vercel.app"
     ],
     "method": ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"],
     "maxAgeSeconds": 3600,

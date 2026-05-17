@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import {
   generateMetaTags,
   generateLocalBusinessSchema,
@@ -46,7 +46,7 @@ export function SEOHead({
           addressCountry: "IN",
         },
         telephone: "+91-9960184674",
-        url: "https://pooja-jewellers-nagpur.web.app",
+        url: "https://poojajewellers.vercel.app",
         priceRange: "₹₹₹",
         geo: {
           latitude: 21.1458,
