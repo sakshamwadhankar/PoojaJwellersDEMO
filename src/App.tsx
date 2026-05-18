@@ -1014,79 +1014,149 @@ function LandingPage({ featured, reviews, reels, loading }: { featured: Product[
 
 /* ───────────────── whatsapp fab ───────────────── */
 
-function WhatsAppFAB() {
-  const [hovered, setHovered] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+/* ── WhatsApp popup — shows every 4th visit, or once dismissed permanently ── */
+const WA_STORAGE_KEY      = "pj_wa_popup_seen";
+const WA_VISIT_COUNT_KEY  = "pj_wa_visit_count";
+const WA_SHOW_EVERY       = 4; // show popup every N visits
+const WA_GROUP_URL   = "https://chat.whatsapp.com/HeYQq1JVCMo9MzMLM9qP5s";
+const WA_ICON_PATH   = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z";
 
-  if (dismissed) return null;
+function WhatsAppPopup() {
+  // mount=false until we check localStorage (avoids SSR flash)
+  const [mounted, setMounted]   = useState(false);
+  const [visible, setVisible]   = useState(false);   // controls CSS transition
+  const [open, setOpen]         = useState(false);   // controls DOM presence
+
+  // On mount: increment visit count, show popup every WA_SHOW_EVERY visits
+  // (unless user permanently dismissed by clicking "Join")
+  useEffect(() => {
+    setMounted(true);
+    const dismissed = localStorage.getItem(WA_STORAGE_KEY);
+    if (dismissed) return; // user already joined — never show again
+
+    const prev  = parseInt(localStorage.getItem(WA_VISIT_COUNT_KEY) || "0", 10);
+    const count = prev + 1;
+    localStorage.setItem(WA_VISIT_COUNT_KEY, String(count));
+
+    if (count % WA_SHOW_EVERY === 0 || count === 1) {
+      // show on 1st visit, then every 4th visit after that
+      setOpen(true);
+      const t = setTimeout(() => setVisible(true), 600);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
+  const close = useCallback((joined = false) => {
+    setVisible(false);
+    // Only permanently suppress if user actually joined the group
+    if (joined) localStorage.setItem(WA_STORAGE_KEY, "1");
+    setTimeout(() => setOpen(false), 300);
+  }, []);
+
+  // Escape key
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, close]);
+
+  // Lock body scroll while open
+  useEffect(() => {
+    if (open) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  if (!mounted || !open) return null;
 
   return (
     <div
-      className="fixed bottom-6 right-6 z-[200] flex items-center gap-4"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Join our WhatsApp group"
+      className={`fixed inset-0 z-[300] flex items-center justify-center px-6 transition-all duration-300 ${
+        visible ? "opacity-100" : "opacity-0 pointer-events-none"
+      }`}
     >
-      {/* Tooltip */}
-      <span
-        className={`rounded-xl border border-camel/30 bg-espresso/95 px-4 py-2 font-sans text-[11px] font-semibold uppercase tracking-[.12em] text-camel shadow-xl backdrop-blur-sm transition-all duration-300 ${
-          hovered ? "opacity-100 translate-x-0" : "opacity-0 translate-x-3 pointer-events-none"
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-espresso/50 backdrop-blur-sm"
+        onClick={() => close(false)}
+      />
+
+      {/* Card */}
+      <div
+        className={`relative z-10 w-full max-w-sm rounded-3xl border border-camel/20 bg-linen shadow-[0_32px_80px_rgba(74,52,42,0.22)] transition-all duration-300 ${
+          visible ? "scale-100 translate-y-0 opacity-100" : "scale-95 translate-y-6 opacity-0"
         }`}
       >
-        Chat with us
-      </span>
-
-      {/* Outer spinning dashed ring + button */}
-      <div className="relative flex h-16 w-16 items-center justify-center">
-
-        {/* Close button — top-left corner */}
+        {/* Close button */}
         <button
-          onClick={() => setDismissed(true)}
-          aria-label="Dismiss WhatsApp button"
-          className="absolute -top-1 -left-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-espresso border border-camel/30 text-camel/70 shadow-md transition-all duration-200 hover:bg-camel hover:text-white hover:border-camel"
+          onClick={() => close(false)}
+          aria-label="Close"
+          className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-xl border border-khaki/40 bg-white text-cocoa transition-all duration-200 hover:border-camel hover:bg-camel hover:text-white"
         >
-          <svg viewBox="0 0 10 10" className="h-2.5 w-2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+          <svg viewBox="0 0 10 10" className="h-3 w-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
             <line x1="2" y1="2" x2="8" y2="8" />
             <line x1="8" y1="2" x2="2" y2="8" />
           </svg>
         </button>
 
-        {/* Soft gold glow */}
-        <span className="absolute inset-0 rounded-full animate-gold-pulse bg-camel" />
+        {/* Header */}
+        <div className="flex items-center gap-4 border-b border-khaki/30 px-6 py-5">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-espresso shadow-md">
+            <svg viewBox="0 0 24 24" className="h-6 w-6">
+              <path fill="#B2967D" d={WA_ICON_PATH} />
+            </svg>
+          </div>
+          <div>
+            <p className="font-sans text-[10px] font-semibold uppercase tracking-[.2em] text-camel">WhatsApp</p>
+            <h3 className="font-serif text-lg font-semibold leading-tight text-espresso">Join Our Group</h3>
+          </div>
+        </div>
 
-        {/* Slowly rotating dashed ring */}
-        <svg
-          className="absolute inset-0 h-full w-full animate-spin-slow"
-          viewBox="0 0 64 64"
-          fill="none"
-        >
-          <circle
-            cx="32" cy="32" r="30"
-            stroke="#B2967D"
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            strokeDasharray="6 5"
-            opacity="0.7"
-          />
-        </svg>
+        {/* Body */}
+        <div className="px-6 py-5">
+          <p className="font-sans text-sm leading-relaxed text-cocoa/80">
+            Stay updated with our latest collections, exclusive offers, and new arrivals — straight to your WhatsApp.
+          </p>
+          <ul className="mt-4 space-y-2.5">
+            {[
+              "New collection launches",
+              "Exclusive member offers",
+              "Festival & seasonal deals",
+            ].map((perk) => (
+              <li key={perk} className="flex items-center gap-2.5 font-sans text-xs text-cocoa">
+                <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-camel/15">
+                  <svg viewBox="0 0 10 10" className="h-2.5 w-2.5" fill="none" stroke="#B2967D" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="2,5 4,7 8,3" />
+                  </svg>
+                </span>
+                {perk}
+              </li>
+            ))}
+          </ul>
+        </div>
 
-        {/* Dark circle button */}
-        <a
-          href="https://chat.whatsapp.com/HeYQq1JVCMo9MzMLM9qP5s"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Chat on WhatsApp"
-          className={`relative flex h-12 w-12 items-center justify-center rounded-full bg-[#111] shadow-[0_4px_24px_rgba(0,0,0,0.5)] transition-all duration-300 ${
-            hovered ? "scale-110 shadow-[0_4px_28px_rgba(178,150,125,0.4)]" : "scale-100"
-          }`}
-        >
-          {/* Gold WhatsApp icon */}
-          <svg viewBox="0 0 24 24" className="h-6 w-6">
-            <path
-              fill="#B2967D"
-              d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
-            />
-          </svg>
-        </a>
+        {/* CTA */}
+        <div className="px-6 pb-6">
+          <a
+            href={WA_GROUP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => close(true)}
+            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-espresso px-6 py-3.5 font-sans text-[11px] font-semibold uppercase tracking-[.18em] text-camel shadow-md transition-all duration-300 hover:bg-camel hover:text-white hover:shadow-[0_4px_20px_rgba(178,150,125,0.4)]"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0">
+              <path fill="currentColor" d={WA_ICON_PATH} />
+            </svg>
+            Join WhatsApp Group
+          </a>
+          <p className="mt-3 text-center font-sans text-[10px] text-cocoa/40">
+            Free to join · Leave anytime
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -1118,7 +1188,7 @@ export default function App() {
           {page === "home" && <LandingPage featured={featured} reviews={reviews} reels={reels} loading={loading} />}
           {page === "collection" && <CollectionPage allProducts={allProducts} />}
         </div>
-        <WhatsAppFAB />
+        <WhatsAppPopup />
         <LightboxModal product={lightboxProduct} onClose={closeLightbox} />
       </LightboxContext.Provider>
     </RouterContext.Provider>
