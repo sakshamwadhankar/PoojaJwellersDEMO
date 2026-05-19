@@ -51,16 +51,16 @@ export function generateMetaTags(config: SEOConfig): Record<string, string> {
     keywords: config.keywords?.join(", ") || "",
     "og:title": config.title,
     "og:description": config.description,
-    "og:image": config.image || "https://poojajewellers.vercel.app/og-image.jpg",
-    "og:url": config.url || "https://poojajewellers.vercel.app",
+    "og:image": config.image || "https://poojajewellersngp.com/og-image.jpg",
+    "og:url": config.url || "https://poojajewellersngp.com",
     "og:type": config.type || "website",
     "og:locale": "en_IN",
     "twitter:card": "summary_large_image",
     "twitter:title": config.title,
     "twitter:description": config.description,
-    "twitter:image": config.image || "https://poojajewellers.vercel.app/og-image.jpg",
+    "twitter:image": config.image || "https://poojajewellersngp.com/og-image.jpg",
     "twitter:site": "@pooja_jewellers_nagpur",
-    "canonical": config.url || "https://poojajewellers.vercel.app",
+    "canonical": config.url || "https://poojajewellersngp.com",
     "viewport": "width=device-width, initial-scale=1.0",
     "charset": "UTF-8",
     "language": "en",
@@ -78,9 +78,9 @@ export function generateLocalBusinessSchema(
   return {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "@id": "https://poojajewellers.vercel.app",
+    "@id": "https://poojajewellersngp.com",
     name: business.name,
-    image: business.image || "https://poojajewellers.vercel.app/logo.png",
+    image: business.image || "https://poojajewellersngp.com/logo.png",
     description:
       "Premium Gold and Silver jewelry store in Gittikhadan, Nagpur. Discover timeless elegance at Pooja Jewellers.",
     address: {
@@ -123,8 +123,8 @@ export function generateOrganizationSchema(): Record<string, unknown> {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "Pooja Jewellers",
-    url: "https://poojajewellers.vercel.app",
-    logo: "https://poojajewellers.vercel.app/logo.png",
+    url: "https://poojajewellersngp.com",
+    logo: "https://poojajewellersngp.com/logo.png",
     description:
       "Premium Gold and Silver jewelry store in Gittikhadan, Nagpur",
     address: {
@@ -173,7 +173,7 @@ export function generateProductSchema(product: {
     },
     offers: {
       "@type": "Offer",
-      url: "https://poojajewellers.vercel.app",
+      url: "https://poojajewellersngp.com",
       priceCurrency: "INR",
       price: product.price || "Contact for pricing",
       availability: "https://schema.org/InStock",
@@ -323,7 +323,7 @@ export function generateSitemapXML(
     priority?: number;
   }>
 ): string {
-  const baseUrl = "https://poojajewellers.vercel.app";
+  const baseUrl = "https://poojajewellersngp.com";
 
   const urlEntries = pages
     .map(

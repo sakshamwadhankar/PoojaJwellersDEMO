@@ -12,4 +12,4 @@ Disallow: /.git
 Crawl-delay: 1
 
 # Sitemap location
-Sitemap: https://poojajewellers.vercel.app/sitemap.xml
+Sitemap: https://poojajewellersngp.com/sitemap.xml

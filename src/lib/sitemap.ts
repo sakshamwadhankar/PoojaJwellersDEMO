@@ -14,7 +14,7 @@ export interface SitemapEntry {
  * Generate sitemap XML content
  */
 export function generateSitemapXML(entries: SitemapEntry[]): string {
-  const baseUrl = "https://poojajewellers.vercel.app";
+  const baseUrl = "https://poojajewellersngp.com";
 
   const urlEntries = entries
     .map((entry) => {

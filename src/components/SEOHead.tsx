@@ -46,7 +46,7 @@ export function SEOHead({
           addressCountry: "IN",
         },
         telephone: "+91-9960184674",
-        url: "https://poojajewellers.vercel.app",
+        url: "https://poojajewellersngp.com",
         priceRange: "₹₹₹",
         geo: {
           latitude: 21.1458,
